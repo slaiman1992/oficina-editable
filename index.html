@@ -459,7 +459,8 @@ demo.disenos = [
   { id: 'dd1', idPieza: 'p0', tema: 'EJEMPLO · El Black Friday no se improvisa', formato: 'Post', laminas: 1, version: 1, estado: 'Listo', creditos: 180, imagenes: 1, enlaces: ['https://www.magnific.com'],
     nota: 'Fondo verde oscuro y titular en lima. Sin logo: es una pieza de consejo.', gancho: 'El Black Friday no se improvisa.', copy: 'Texto de ejemplo para el copy…', hashtags: '#MarketingDigitalRD #NegociosRD', cta: 'Agenda tu plan' },
   { id: 'dd2', idPieza: 'p00', tema: 'EJEMPLO · Errores al compartir el WhatsApp del negocio', formato: 'Carrusel', laminas: 3, version: 2, estado: 'Listo', creditos: 720, imagenes: 3, enlaces: ['https://www.magnific.com', 'https://www.magnific.com', 'https://www.magnific.com'],
-    comentario: 'Más simple, con menos elementos', nota: 'Portada con el gancho, interiores numeradas y cierre con logo.', gancho: '¿Tu equipo usa el mismo WhatsApp y se pierden ventas?', copy: 'Texto de ejemplo…', hashtags: '#WhatsAppBusiness #VentasRD', cta: 'Escríbenos al DM' },
+    comentario: 'Más simple, con menos elementos', nota: 'Portada con el gancho, interiores numeradas y cierre con logo.',
+    versiones: [{ version: 1, imagenes: 3, enlaces: ['https://www.magnific.com'], nota: 'Primera versión de ejemplo, con más elementos.', comentario: '' }], gancho: '¿Tu equipo usa el mismo WhatsApp y se pierden ventas?', copy: 'Texto de ejemplo…', hashtags: '#WhatsAppBusiness #VentasRD', cta: 'Escríbenos al DM' },
   { id: 'dd3', idPieza: 'p000', tema: 'EJEMPLO · Nuevas métricas por elemento en Meta Ads', formato: 'Carrusel', laminas: 6, version: 1, estado: 'Diseñando', imagenes: 0, enlaces: [] }
 ];
 // Arte de ejemplo dibujado en el momento (solo modo demo)
@@ -500,6 +501,7 @@ function demoApi(p) {
     if (p.accion === 'disenos') return res({ ok: true, disenos: demo.disenos.map(d => Object.assign({}, d)) });
     if (p.accion === 'imagenDiseno') {
       const d = demo.disenos.find(x => x.id === p.id);
+      if (d && p.version) return res({ ok: true, n: Number(p.n || 0), total: d.imagenes, data: demoArte(Object.assign({}, d, { version: Number(p.version) }), Number(p.n || 0)) });
       return res(d && d.imagenes ? { ok: true, n: Number(p.n || 0), total: d.imagenes, data: demoArte(d, Number(p.n || 0)) } : { ok: false, error: 'Sin imágenes todavía (demo).' });
     }
     if (p.accion === 'disenar') {
@@ -514,7 +516,7 @@ function demoApi(p) {
     if (p.accion === 'decidirDiseno') {
       const d = demo.disenos.find(x => x.id === p.id);
       if (!d) return res({ ok: false, error: 'No encontré ese diseño (demo).' });
-      if (p.decision === 'otra') { d.estado = 'Pedido'; d.version++; d.comentario = p.comentario; d.nota = ''; setTimeout(() => { d.estado = 'Diseñando'; }, 3000); setTimeout(() => { d.estado = 'Listo'; d.nota = 'Ejemplo: apliqué "' + p.comentario + '".'; }, 9000); return res({ ok: true, version: d.version }); }
+      if (p.decision === 'otra') { (d.versiones = d.versiones || []).unshift({ version: d.version, imagenes: d.imagenes, enlaces: d.enlaces || [], nota: d.nota, comentario: d.comentario || '' }); d.estado = 'Pedido'; d.version++; d.comentario = p.comentario; d.nota = ''; setTimeout(() => { d.estado = 'Diseñando'; }, 3000); setTimeout(() => { d.estado = 'Listo'; d.nota = 'Ejemplo: apliqué "' + p.comentario + '".'; }, 9000); return res({ ok: true, version: d.version }); }
       demo.disenos = demo.disenos.filter(x => x.id !== p.id);
       return res({ ok: true });
     }
@@ -1750,7 +1752,7 @@ const OPCIONES_OTRA = [
   'Corrige errores en el texto',
   '✏️ Escribir mi propio comentario…'
 ];
-const EST = { lista: [], i: 0, n: 0, img: {}, ocupado: false, modo: 'ver', op: 0, alcance: 'lamina', confirmarB: 0 };
+const EST = { lista: [], i: 0, n: 0, img: {}, ocupado: false, modo: 'ver', op: 0, alcance: 'lamina', confirmarB: 0, ver: null }; // ver = versión anterior que estás mirando (null = la actual)
 const estadosDisenos = {};
 let pedidoDiseno = null, ultimoDisenos = -1e9;
 
@@ -1847,15 +1849,21 @@ async function recargarEstudio(primera) {
 }
 function cerrarEstudio() { mostrarPantalla('oficina'); pintarPrompt(); refrescarDisenos(true); }
 
+// La versión anterior que estás mirando (o null si ves la actual)
+const versionVista = d => (d && EST.ver != null && (d.versiones || []).find(v => String(v.version) === String(EST.ver))) || null;
 function pintarPieEstudio(d) {
   let b;
   if (!d) b = [['MENOS', 'Cerrar']];
   else if (EST.modo === 'otra') b = [['FLECHAS', (d.imagenes || 0) > 1 ? '▲▼ opción · ◀▶ lámina o todo' : '▲▼ opción'], ['A', 'Enviar'], ['B', 'Volver']];
-  else {
+  else if (versionVista(d)) {
+    const v = versionVista(d);
+    b = [['MAS', 'Otra versión guardada'], ['X', 'Abrir en Magnific']].concat(v.imagenes > 1 ? [['L', 'Lámina'], ['R', 'Lámina']] : []).concat([['B', 'Volver a la actual'], ['MENOS', 'Cerrar']]);
+  } else {
     const total = d.imagenes || 0, puede = d.estado === 'Listo' || d.estado === 'Error';
     b = (puede ? (d.estado === 'Listo' && total ? [['A', 'Aprobar']] : []).concat([['Y', d.estado === 'Error' ? 'Reintentar' : 'Otra versión'], ['B', 'Descartar']]) : [])
       .concat(total ? [['X', 'Abrir en Magnific']] : [])
       .concat(total > 1 ? [['L', 'Lámina'], ['R', 'Lámina']] : [])
+      .concat((d.versiones || []).length ? [['MAS', 'Versiones anteriores (' + d.versiones.length + ')']] : [])
       .concat(EST.lista.length > 1 ? [['FLECHAS', 'Otro diseño']] : [])
       .concat([['MENOS', 'Cerrar']]);
   }
@@ -1873,8 +1881,22 @@ function pintarEstudio() {
     info.innerHTML = '<div class="vacio"><div><div>🎨</div><p>No hay diseños en la mesa.</p><p style="font-size:16px">En la mesa del Creativo, presiona + sobre un post o carrusel para enviárselo al Diseñador.</p></div></div>';
     return;
   }
-  const total = d.imagenes || 0;
+  const vista = versionVista(d);
+  if (!vista) EST.ver = null;
+  const total = vista ? vista.imagenes : (d.imagenes || 0);
   EST.n = Math.max(0, Math.min(EST.n, total - 1));
+  if (vista) {
+    img.innerHTML = '<div class="estudio-marco"><div class="estudio-cargando">⏳</div></div>' +
+      '<div class="estudio-laminas">Versión ' + esc(vista.version) + ' (guardada)' + (total > 1 ? ' · lámina ' + (EST.n + 1) + ' de ' + total + ' · L / R' : '') + '</div>';
+    cargarArte(d, EST.n, vista.version);
+    const blv = (t, x) => x ? '<div class="bloque"><h4>' + t + '</h4><p>' + esc(x) + '</p></div>' : '';
+    info.innerHTML = '<div class="etiquetas"><span class="etiqueta formato">' + esc(d.formato) + '</span><span class="etiqueta curso">Versión ' + esc(vista.version) + ' · guardada</span>' +
+      '<span class="etiqueta">Actual: versión ' + esc(d.version) + '</span></div>' +
+      '<div class="carta-titulo">' + esc(d.tema) + '</div>' + blv('Nota del Diseñador en esa versión', vista.nota) + blv('Lo que pediste antes de esa versión', vista.comentario) +
+      '<div class="bloque"><h4>Historial</h4><p>Todas las versiones quedan guardadas: en Magnific, en la pestaña 🗂 Versiones diseños de tu hoja y en la carpeta "AI office · Diseños" de tu Drive.</p></div>';
+    info.scrollTop = 0;
+    return;
+  }
   // Imagen (o aviso de que se está diseñando)
   if (!total) {
     img.innerHTML = '<div class="estudio-espera">' + (d.estado === 'Error'
@@ -1901,12 +1923,12 @@ function pintarEstudio() {
   info.scrollTop = 0;
 }
 
-async function cargarArte(d, n) {
-  const clave = d.id + '|' + d.version + '|' + d.estado + '|' + n;
-  const poner = html => { const m = $('.estudio-marco'); if (m && EST.lista[EST.i] === d && EST.n === n) m.innerHTML = html; };
+async function cargarArte(d, n, version) {
+  const clave = d.id + '|' + (version ? 'v' + version : d.version + '|' + d.estado) + '|' + n;
+  const poner = html => { const m = $('.estudio-marco'); if (m && EST.lista[EST.i] === d && EST.n === n && String(EST.ver || '') === String(version || '')) m.innerHTML = html; };
   if (EST.img[clave]) return poner('<img src="' + EST.img[clave] + '" alt="">');
   try {
-    const r = await api({ accion: 'imagenDiseno', id: d.id, n: n });
+    const r = await api(Object.assign({ accion: 'imagenDiseno', id: d.id, n: n }, version ? { version: version } : {}));
     const ks = Object.keys(EST.img); if (ks.length > 8) delete EST.img[ks[0]]; // poca memoria en la Switch
     EST.img[clave] = r.data;
     poner('<img src="' + r.data + '" alt="">');
@@ -1970,10 +1992,24 @@ function manejarEstudio(a) {
     if (a === 'A') return pedirOtraVersion(d);
     return;
   }
+  const vs = (d && d.versiones) || [];
+  if (a === 'MAS' && vs.length) {
+    // actual → la versión guardada más reciente → … → la más vieja → actual
+    const k = EST.ver == null ? 0 : vs.findIndex(v => String(v.version) === String(EST.ver)) + 1;
+    EST.ver = k < vs.length ? vs[k].version : null; EST.n = 0; sonar('click');
+    return pintarEstudio();
+  }
   if (a === 'MENOS' || a === 'MAS') return cerrarEstudio();
+  if (versionVista(d)) {
+    const v = versionVista(d);
+    if ((a === 'L' || a === 'R') && v.imagenes > 1) { EST.n = (EST.n + (a === 'R' ? 1 : -1) + v.imagenes) % v.imagenes; sonar('click'); return pintarEstudio(); }
+    if (a === 'X') { const u = (v.enlaces || [])[EST.n] || (v.enlaces || [])[0]; if (u) window.open(u, '_blank', 'noopener'); else avisar('Esa versión no tiene enlace de Magnific.'); return; }
+    if (a === 'B' || a === 'A' || a === 'Y') { EST.ver = null; EST.n = 0; sonar('click'); return pintarEstudio(); }
+    if (a !== 'IZQ' && a !== 'DER') return;
+  }
   const n = EST.lista.length;
-  if (a === 'DER' && n > 1) { EST.i = (EST.i + 1) % n; EST.n = 0; sonar('click'); return pintarEstudio(); }
-  if (a === 'IZQ' && n > 1) { EST.i = (EST.i - 1 + n) % n; EST.n = 0; sonar('click'); return pintarEstudio(); }
+  if (a === 'DER' && n > 1) { EST.i = (EST.i + 1) % n; EST.n = 0; EST.ver = null; sonar('click'); return pintarEstudio(); }
+  if (a === 'IZQ' && n > 1) { EST.i = (EST.i - 1 + n) % n; EST.n = 0; EST.ver = null; sonar('click'); return pintarEstudio(); }
   if (a === 'ARRIBA') { $('#estudio-info').scrollTop -= 140; return; }
   if (a === 'ABAJO') { $('#estudio-info').scrollTop += 140; return; }
   if (!d) { if (a === 'A' || a === 'B') cerrarEstudio(); return; }
