@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#02261e">
 <title>Editable · AI Office</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono-192.png">
+<link rel="apple-touch-icon" href="icono-192.png">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -1298,6 +1302,8 @@ construirJugador();
 aplicarCalidad();
 bucle();
 if (DEMO) $('#demo').classList.remove('oculto');
+// Permite instalar el juego como app (pantalla completa en la Switch)
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
 pintarPin();
 setInterval(() => { if (pantalla === 'oficina' || pantalla === 'panel') refrescarEstado(); }, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refrescarEstado(); });
