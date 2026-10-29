@@ -1,0 +1,1310 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#02261e">
+<title>Editable · AI Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   OFICINA EDITABLE — diorama 3D con la línea gráfica de Editable
+   ============================================================ */
+:root {
+  --verde: #02261e; --verde-2: #0b3a2f; --lima: #dafc92; --turquesa: #89c9c9; --hueso: #f2f7f9; --negro: #000;
+  --tinta: #02261e; --tinta-suave: #4d6a63; --linea: rgba(2,38,30,.12);
+  --rojo: #ff5a52; --ambar: #f5b84a;
+  --sombra: 0 18px 40px rgba(0,0,0,.28), 0 2px 0 rgba(255,255,255,.4) inset;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body { font-family: 'Poppins', system-ui, sans-serif; color: var(--tinta); user-select: none; -webkit-user-select: none;
+  background: radial-gradient(1100px 700px at 28% 18%, #13493c 0%, #02261e 52%, #011a14 100%); }
+body::before { content: ''; position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(600px 400px at 85% 90%, rgba(137,201,201,.16), transparent 70%), radial-gradient(500px 360px at 10% 95%, rgba(218,252,146,.10), transparent 70%); }
+#escena { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.oculto { display: none !important; }
+.mono { font-family: 'Roboto Mono', monospace; }
+
+/* ---------- HUD ---------- */
+#hud { position: fixed; top: 16px; left: 18px; right: 18px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; z-index: 5; }
+.ficha { background: rgba(242,247,249,.95); border-radius: 18px; box-shadow: var(--sombra); padding: 10px 14px; pointer-events: auto; backdrop-filter: blur(6px); }
+#jugador { display: flex; gap: 12px; align-items: center; min-width: 300px; }
+#avatar { width: 52px; height: 52px; border-radius: 14px; background: var(--verde); display: grid; place-items: center; padding: 8px; }
+#avatar svg { width: 100%; height: auto; }
+#nivel-titulo { font: 700 17px 'Poppins'; line-height: 1.15; }
+#nivel-sub { font: 600 12px 'Roboto Mono'; color: var(--tinta-suave); margin-top: 1px; }
+#xp-barra { margin-top: 7px; height: 9px; width: 220px; border-radius: 99px; background: rgba(2,38,30,.1); overflow: hidden; }
+#xp-relleno { height: 100%; width: 0%; border-radius: 99px; background: linear-gradient(90deg, var(--turquesa), var(--lima)); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+#derecha { display: flex; gap: 10px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 8px; font: 600 14px 'Poppins'; padding: 9px 13px; }
+.chip b { font: 700 17px 'Roboto Mono'; }
+#conexion { width: 10px; height: 10px; border-radius: 50%; background: #9fb0ac; box-shadow: 0 0 0 3px rgba(2,38,30,.08); }
+#conexion.ok { background: #46c17a; } #conexion.mal { background: var(--rojo); }
+#demo { background: var(--lima); color: var(--verde); font: 700 12px 'Roboto Mono'; padding: 6px 10px; border-radius: 10px; letter-spacing: 1px; box-shadow: var(--sombra); }
+
+/* ---------- Estación cercana ---------- */
+#prompt { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 5; width: min(900px, calc(100% - 36px)); }
+#prompt .ficha { display: flex; gap: 16px; align-items: center; padding: 12px 16px 12px 12px; }
+#prompt-icono { font-size: 28px; width: 56px; height: 56px; border-radius: 16px; background: var(--verde); display: grid; place-items: center; flex: none; }
+#prompt-nombre { font: 700 19px 'Poppins'; }
+#prompt-estado { font: 500 13px 'Roboto Mono'; color: var(--tinta-suave); max-width: 420px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#prompt-acciones { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.accion { display: inline-flex; align-items: center; gap: 8px; font: 600 13.5px 'Poppins'; background: #fff; border: 1px solid var(--linea); border-radius: 12px; padding: 5px 12px 5px 5px; cursor: pointer; pointer-events: auto; transition: transform .12s ease; }
+.accion:active { transform: scale(.97); }
+.btn { display: inline-grid; place-items: center; min-width: 28px; height: 28px; border-radius: 50%; font: 700 13px 'Roboto Mono'; padding: 0 6px; }
+.btn.A { background: var(--lima); color: var(--verde); } .btn.B { background: var(--verde); color: #fff; }
+.btn.X { background: var(--turquesa); color: var(--verde); } .btn.Y { background: #fff; color: var(--verde); box-shadow: inset 0 0 0 2px var(--verde); }
+.btn.L, .btn.R, .btn.MENOS, .btn.MAS, .btn.FLECHAS { background: rgba(2,38,30,.1); color: var(--verde); border-radius: 9px; }
+.punto-estado { width: 9px; height: 9px; border-radius: 50%; display: inline-block; vertical-align: 1px; margin-right: 7px; }
+
+/* ---------- Pantallas (PIN, calibración, menú) ---------- */
+.pantalla { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px;
+  background: linear-gradient(135deg, #89c9c9 0%, #b9e6ae 55%, #dafc92 100%); }
+.pantalla::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(700px 500px at 80% 10%, rgba(255,255,255,.35), transparent 70%); }
+.pantalla .caja { position: relative; z-index: 1; background: rgba(242,247,249,.96); border-radius: 26px; box-shadow: 0 30px 60px rgba(2,38,30,.25); padding: 30px 34px; width: min(600px, 100%); text-align: center; }
+.caja h1 { margin: 0 0 6px; font: 700 28px 'Poppins'; }
+.caja p { margin: 6px 0; color: var(--tinta-suave); font-weight: 500; font-size: 16px; }
+.marca-pin { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 8px; }
+.marca-pin .iso { width: 92px; } .marca-pin .logo { width: 230px; }
+#pin-cajas { display: flex; gap: 10px; justify-content: center; margin: 18px 0; }
+#pin-cajas div { width: 50px; height: 58px; border-radius: 14px; display: grid; place-items: center; font: 700 26px 'Roboto Mono'; background: #fff; box-shadow: inset 0 0 0 2px var(--linea); }
+#teclado { display: grid; grid-template-columns: repeat(3, 84px); gap: 10px; justify-content: center; }
+#teclado button, .opcion { font: 600 22px 'Roboto Mono'; height: 56px; border-radius: 16px; border: 0; background: #fff; color: var(--verde); box-shadow: inset 0 0 0 1px var(--linea), 0 3px 0 rgba(2,38,30,.08); cursor: pointer; transition: transform .1s ease; }
+#teclado button.foco, .opcion.foco { background: var(--verde); color: var(--lima); transform: translateY(-2px); box-shadow: 0 8px 18px rgba(2,38,30,.25); }
+#pin-error { color: #c0392b !important; min-height: 24px; font-weight: 600 !important; }
+#calib-boton { font: 700 56px 'Roboto Mono'; margin: 18px auto; width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; background: var(--lima); color: var(--verde); box-shadow: 0 14px 28px rgba(2,38,30,.25); }
+#calib-progreso { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
+#calib-progreso i { width: 22px; height: 6px; border-radius: 99px; background: rgba(2,38,30,.12); }
+#calib-progreso i.hecho { background: var(--verde); }
+.fila-botones { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+.boton-texto { font: 600 14px 'Poppins'; padding: 10px 16px; border-radius: 12px; border: 0; background: #fff; color: var(--verde); box-shadow: inset 0 0 0 1px var(--linea); cursor: pointer; }
+#menu-opciones { display: grid; gap: 10px; margin-top: 14px; }
+#menu-opciones .opcion { font: 600 17px 'Poppins'; height: 52px; text-align: left; padding: 0 18px; }
+
+/* ---------- Panel de cartas ---------- */
+#panel { position: fixed; inset: 0; z-index: 10; background: rgba(1,20,15,.55); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 18px; }
+#panel-caja { width: min(1000px, 100%); height: min(650px, calc(100vh - 36px)); background: var(--hueso); border-radius: 26px; box-shadow: 0 30px 70px rgba(0,0,0,.45); display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+#panel-cabeza { display: flex; align-items: center; gap: 14px; padding: 16px 22px; background: var(--verde); color: var(--hueso); }
+#panel-cabeza .iso { width: 54px; }
+#panel-icono { font-size: 24px; }
+#panel-cabeza h2 { margin: 0; font: 700 22px 'Poppins'; color: var(--lima); }
+#panel-contador { margin-left: auto; font: 600 15px 'Roboto Mono'; background: rgba(218,252,146,.14); color: var(--lima); border-radius: 10px; padding: 5px 11px; }
+#panel-cuerpo { position: relative; overflow: hidden; padding: 20px 24px; }
+#carta { height: 100%; overflow-y: auto; scroll-behavior: smooth; padding-right: 6px; }
+#carta::-webkit-scrollbar { width: 6px; } #carta::-webkit-scrollbar-thumb { background: rgba(2,38,30,.2); border-radius: 9px; }
+#carta.sale-si { animation: saleDerecha .38s cubic-bezier(.5,0,.75,0) forwards; }
+#carta.sale-no { animation: saleIzquierda .38s cubic-bezier(.5,0,.75,0) forwards; }
+#carta.sale-arriba { animation: saleArriba .38s cubic-bezier(.5,0,.75,0) forwards; }
+#carta.entra { animation: entra .32s cubic-bezier(.2,.8,.2,1); }
+@keyframes saleDerecha { to { transform: translateX(80%) rotate(5deg); opacity: 0; } }
+@keyframes saleIzquierda { to { transform: translateX(-80%) rotate(-5deg); opacity: 0; } }
+@keyframes saleArriba { to { transform: translateY(-60%) scale(.94); opacity: 0; } }
+@keyframes entra { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+.etiquetas { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.etiqueta { font: 600 12px 'Roboto Mono'; padding: 5px 11px; border-radius: 99px; background: #fff; box-shadow: inset 0 0 0 1px var(--linea); color: var(--tinta-suave); }
+.etiqueta.puntaje { background: var(--verde); color: var(--lima); box-shadow: none; }
+.etiqueta.formato { background: var(--lima); color: var(--verde); box-shadow: none; }
+.carta-titulo { font: 700 27px/1.25 'Poppins'; margin: 6px 0 14px; letter-spacing: -.2px; }
+.bloque { background: #fff; border-radius: 16px; padding: 13px 16px; margin: 10px 0; box-shadow: inset 0 0 0 1px var(--linea); }
+.bloque h4 { margin: 0 0 4px; font: 600 11.5px 'Roboto Mono'; text-transform: uppercase; letter-spacing: 1.2px; color: #6f8a84; }
+.bloque p { margin: 0; font: 500 17px/1.5 'Poppins'; white-space: pre-wrap; }
+.bloque.aviso { background: #fff7e4; box-shadow: inset 0 0 0 1px #f2d39a; }
+.bloque.gancho { background: var(--verde); } .bloque.gancho h4 { color: var(--turquesa); } .bloque.gancho p { color: var(--lima); font: 600 23px/1.3 'Poppins'; }
+.vacio { height: 100%; display: grid; place-items: center; text-align: center; }
+.vacio div { font-size: 56px; }
+.vacio p { font: 600 20px 'Poppins'; color: var(--tinta-suave); }
+#panel-pie { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 14px 16px; background: #e7eeee; }
+
+/* ---------- Avisos ---------- */
+#avisos { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 30; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+.aviso-toast { background: var(--verde); color: var(--hueso); border-radius: 14px; padding: 11px 18px; font: 500 15px 'Poppins'; box-shadow: 0 14px 30px rgba(0,0,0,.3); animation: entra .25s ease; max-width: min(720px, 92vw); text-align: center; }
+.aviso-toast.mal { background: #5c1d1a; }
+.xp-flota { position: fixed; z-index: 31; font: 700 28px 'Roboto Mono'; color: var(--lima); text-shadow: 0 3px 0 var(--verde), 0 8px 20px rgba(0,0,0,.4); pointer-events: none; animation: flotar 1.1s ease forwards; }
+@keyframes flotar { from { opacity: 0; transform: translateY(10px) scale(.8); } 20% { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-60px); } }
+#subio { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; pointer-events: none; }
+#subio .caja { background: var(--verde); color: var(--lima); border-radius: 26px; padding: 26px 40px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,.45); animation: entra .35s ease; }
+#subio h1 { margin: 0; font: 700 36px 'Poppins'; }
+#subio p { margin: 6px 0 0; font: 600 18px 'Roboto Mono'; color: var(--turquesa); }
+#ayuda-teclado { position: fixed; right: 18px; bottom: 14px; z-index: 4; font: 500 11px 'Roboto Mono'; color: rgba(242,247,249,.45); }
+@media (max-width: 760px) {
+  #prompt-estado { display: none; } #jugador { min-width: 0; } #xp-barra { width: 130px; } .carta-titulo { font-size: 21px; }
+}
+</style>
+</head>
+<body>
+<canvas id="escena"></canvas>
+
+<!-- HUD -->
+<div id="hud" class="oculto">
+  <div id="jugador" class="ficha">
+    <div id="avatar" class="logo-iso"></div>
+    <div>
+      <div id="nivel-titulo">Nivel 1 · Becario</div>
+      <div id="nivel-sub">0 XP · Racha 0 días</div>
+      <div id="xp-barra"><div id="xp-relleno"></div></div>
+    </div>
+  </div>
+  <div id="derecha">
+    <span id="demo" class="oculto">DEMO</span>
+    <div class="ficha chip" title="Noticias por decidir">📰 <b id="c-noticias">0</b></div>
+    <div class="ficha chip" title="Tendencias por decidir">🔥 <b id="c-tendencias">0</b></div>
+    <div class="ficha chip" title="Piezas por revisar">✍️ <b id="c-piezas">0</b></div>
+    <div class="ficha chip accion" data-accion="MAS"><span class="btn MAS">+</span>Menú <span id="conexion"></span></div>
+  </div>
+</div>
+
+<!-- Estación cercana -->
+<div id="prompt" class="oculto">
+  <div class="ficha">
+    <div id="prompt-icono">📡</div>
+    <div>
+      <div id="prompt-nombre">Radar</div>
+      <div id="prompt-estado"><span class="punto-estado"></span>Inactivo</div>
+    </div>
+    <div id="prompt-acciones"></div>
+  </div>
+</div>
+
+<!-- Panel de cartas -->
+<div id="panel" class="oculto">
+  <div id="panel-caja">
+    <div id="panel-cabeza"><span class="iso logo-iso-lima"></span><span id="panel-icono">📰</span><h2 id="panel-titulo">Mesa de noticias</h2><span id="panel-contador">0 de 0</span></div>
+    <div id="panel-cuerpo"><div id="carta"></div></div>
+    <div id="panel-pie"></div>
+  </div>
+</div>
+
+<!-- PIN -->
+<div id="pantalla-pin" class="pantalla oculto">
+  <div class="caja">
+    <div class="marca-pin"><div class="iso logo-iso"></div><div class="logo logo-texto"></div></div>
+    <h1>AI Office</h1>
+    <p>Escribe tu PIN de 6 dígitos para entrar.</p>
+    <div id="pin-cajas"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+    <div id="teclado"></div>
+    <p id="pin-error"></p>
+  </div>
+</div>
+
+<!-- Calibración de controles -->
+<div id="pantalla-calibrar" class="pantalla oculto">
+  <div class="caja">
+    <h1>Configura tus controles</h1>
+    <p id="calib-texto">Presiona el botón que se ve abajo en tu Joy-Con.</p>
+    <div id="calib-boton">A</div>
+    <p id="calib-ayuda">Si el botón no responde, revisa que los Joy-Con estén conectados.</p>
+    <div id="calib-progreso"></div>
+    <div class="fila-botones">
+      <button class="boton-texto" id="calib-saltar">Usar controles estándar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Menú -->
+<div id="pantalla-menu" class="pantalla oculto">
+  <div class="caja">
+    <h1>Menú</h1>
+    <div id="menu-opciones"></div>
+    <p style="margin-top:14px">Usa ▲▼ y A para elegir · − o B para volver</p>
+  </div>
+</div>
+
+<div id="avisos"></div>
+<div id="subio" class="oculto"><div class="caja"><h1>¡Subiste de nivel!</h1><p id="subio-texto">Nivel 2 · Junior</p></div></div>
+<div id="ayuda-teclado">Teclado: flechas · Enter = A · Retroceso = B · X · Y · Q/E = L/R · Esc = − · P = +</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- La dirección de tu oficina vive en config.js (así puedes actualizar este archivo sin volver a pegarla) -->
+<script src="config.js"></script>
+<script>
+'use strict';
+// Si config.js no existe o no tiene la dirección, el juego abre en MODO DEMO con datos de ejemplo.
+const API_URL = String(window.OFICINA_API_URL || '').trim();
+
+const DEMO = !/^https:\/\/script\.google\.com\//.test(API_URL);
+
+// Logo de Editable (vectorial, tomado del manual de marca)
+const SVG_ISOTIPO = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="227 433 423 214"><g fill="COLOR"><path fill-rule="nonzero" d="M 315.96 597.67 C 315.71 620.26 295.31 639.61 271.42 639.93 L 270.87 639.93 C 247.76 639.93 227.80 620.69 227.13 597.66 C 226.81 585.58 231.30 574.15 239.78 565.39 C 248.22 556.69 259.46 551.88 271.37 551.86 L 271.45 551.86 C 283.09 551.86 294.19 556.58 302.66 565.16 C 311.23 573.85 316.09 585.69 315.96 597.67 "/><path fill-rule="nonzero" d="M 537.39 597.66 C 537.14 620.23 516.75 639.59 492.86 639.90 L 492.30 639.90 C 469.17 639.90 449.20 620.68 448.56 597.63 C 448.24 585.57 452.73 574.13 461.21 565.37 C 469.65 556.68 480.88 551.88 492.80 551.86 L 492.88 551.86 C 504.52 551.86 515.60 556.58 524.09 565.13 C 532.69 573.82 537.52 585.66 537.39 597.66 "/><path fill-rule="nonzero" d="M 429.25 483.74 C 429.00 506.32 408.61 525.68 384.73 525.99 L 384.17 525.99 C 361.04 525.99 341.06 506.76 340.42 483.71 C 340.10 471.66 344.59 460.22 353.07 451.46 C 361.51 442.76 372.76 437.96 384.67 437.95 L 384.74 437.95 C 396.39 437.95 407.48 442.65 415.95 451.22 C 424.52 459.91 429.38 471.74 429.25 483.74 "/><path fill-rule="nonzero" d="M 645.5 483.74 C 645.24 506.32 624.87 525.68 600.97 525.99 L 600.42 525.99 C 577.28 525.99 557.31 506.76 556.67 483.71 C 556.35 471.66 560.82 460.22 569.33 451.46 C 577.77 442.76 589.00 437.96 600.93 437.95 L 600.99 437.95 C 612.64 437.95 623.71 442.65 632.19 451.22 C 640.80 459.91 645.64 471.74 645.5 483.74 "/><path fill-rule="nonzero" d="M 634.75 626.13 C 627.66 633.33 617.80 638.03 607.00 639.35 C 579.16 642.76 555.71 623.64 551.22 593.82 C 550.82 591.36 550.57 588.80 550.30 586.32 C 549.61 579.91 548.90 573.27 546.46 567.28 C 537.52 545.17 511.38 529.52 488.19 532.37 C 461.51 535.67 442.25 552.78 435.40 579.33 C 434.25 583.75 433.33 588.39 432.41 592.85 C 430.00 604.82 427.49 617.19 420.90 626.55 C 411.21 640.30 393.22 647.46 375.09 644.76 C 358.23 642.25 345.23 631.88 340.31 616.98 C 338.19 610.64 337.16 603.95 336.5 598.82 C 330.41 552.07 316.09 537.48 269.91 530.97 C 244.32 527.38 227.65 508.91 227.44 483.95 C 227.26 460.53 244.69 439.32 267.16 435.66 C 270.07 435.17 272.94 434.95 275.76 434.95 C 297.41 434.95 315.87 448.59 322.19 470.23 C 324.11 476.74 325.38 483.03 325.93 488.87 C 328.84 519.03 350.74 540.14 380.43 541.43 C 414.03 542.89 436.82 524.60 441.59 492.48 C 445.09 468.74 449.16 451.11 469.68 440.73 C 484.74 433.10 501.41 433.00 515.44 440.44 C 529.5 447.89 538.76 461.77 540.89 478.48 C 541.14 480.46 541.35 482.46 541.58 484.45 C 542.62 493.60 543.67 503.04 547.61 511.71 C 550.94 519.03 555.75 525.60 561.92 531.26 C 568.89 537.66 573.59 539.27 582.35 542.26 C 588.10 544.22 594.08 544.82 599.89 545.42 C 605.17 545.97 610.16 546.47 615.02 547.92 C 630.02 552.39 641.49 564.82 645.70 581.17 C 650.05 597.92 645.94 614.74 634.75 626.13 "/></g></svg>';
+const SVG_LOGOTIPO = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="972 451 749 138"><g fill="COLOR"><path fill-rule="nonzero" d="M 1033.27 455.53 L 1052.57 455.53 L 1052.57 485.89 L 1049.39 485.89 C 1036.26 485.89 1026.96 487.39 1021.46 490.39 C 1017.08 492.76 1012.90 498.26 1008.90 506.88 L 1052.57 506.88 L 1052.57 535.37 L 1008.90 535.37 C 1012.27 543.37 1016.05 548.74 1020.24 551.49 C 1024.42 554.24 1030.95 555.80 1039.83 556.17 C 1042.32 556.30 1046.57 556.36 1052.57 556.36 L 1052.57 586.73 L 1033.27 586.73 C 1016.52 586.73 1002.46 580.45 991.10 567.89 C 979.73 555.33 974.04 539.75 974.04 521.13 C 974.04 502.64 979.69 487.08 991.00 474.46 C 1002.31 461.84 1016.40 455.53 1033.27 455.53 "/><path fill-rule="nonzero" d="M 1072.25 455.53 L 1106.55 455.53 C 1127.54 455.53 1144.78 461.65 1158.28 473.90 C 1171.78 486.14 1178.52 502.26 1178.52 522.25 C 1178.52 540.87 1172.37 556.24 1160.06 568.36 C 1147.75 580.48 1131.98 586.60 1112.74 586.73 L 1112.74 555.24 C 1121.98 555.24 1129.70 551.96 1135.88 545.40 C 1142.07 538.84 1145.16 531.25 1145.16 522.63 C 1145.16 511.51 1141.60 502.82 1134.48 496.57 C 1127.35 490.33 1117.48 487.14 1104.86 487.01 L 1104.86 586.73 L 1072.25 586.73 Z M 1072.25 455.53 "/><path fill-rule="nonzero" d="M 1196.33 455.53 L 1228.94 455.53 L 1228.94 586.73 L 1196.33 586.73 Z M 1196.33 455.53 "/><path fill-rule="nonzero" d="M 1240 455.53 L 1320.59 455.53 L 1320.59 487.01 L 1296.60 487.01 L 1296.60 586.73 L 1263.99 586.73 L 1263.99 487.01 L 1240 487.01 Z M 1240 455.53 "/><path fill-rule="nonzero" d="M 1424.98 499.76 L 1424.98 586.73 L 1392.37 586.73 L 1392.37 541 L 1371.94 541 L 1371.94 511.38 L 1392.37 511.38 L 1392.37 498.45 C 1392.37 493.95 1391.16 490.23 1388.72 487.30 C 1386.28 484.36 1383.06 482.89 1379.07 482.89 C 1375.07 482.89 1371.85 484.36 1369.41 487.30 C 1366.98 490.23 1365.76 493.95 1365.76 498.45 L 1365.76 586.73 L 1333.14 586.73 L 1333.14 499.76 C 1333.14 486.14 1337.39 474.99 1345.89 466.30 C 1354.39 457.62 1365.44 453.28 1379.07 453.28 C 1392.81 453.28 1403.90 457.68 1412.33 466.49 C 1420.77 475.30 1424.98 486.39 1424.98 499.76 "/><path fill-rule="nonzero" d="M 1537.07 492.64 C 1537.07 496.89 1535.78 501.42 1533.22 506.23 C 1530.66 511.04 1527.75 514.44 1524.51 516.44 C 1537.25 522.69 1543.62 533.62 1543.62 549.24 C 1543.62 560.61 1539.91 569.70 1532.47 576.51 C 1525.03 583.32 1515.51 586.73 1503.89 586.73 L 1486.83 586.73 L 1486.83 556.36 C 1494.95 556.36 1500.58 555.55 1503.70 553.92 C 1506.82 552.30 1508.39 549.24 1508.39 544.74 C 1508.39 540.24 1506.64 537.12 1503.14 535.37 C 1499.64 533.62 1494.21 532.75 1486.83 532.75 L 1486.83 505.39 C 1491.96 505.39 1495.92 504.48 1498.73 502.66 C 1501.55 500.85 1502.95 498.45 1502.95 495.45 C 1502.95 487.58 1499.39 483.64 1492.27 483.64 C 1488.02 483.64 1484.93 484.86 1482.99 487.30 C 1481.05 489.73 1480.08 492.76 1480.08 496.39 L 1480.08 586.73 L 1447.48 586.73 L 1447.48 500.89 C 1447.48 486.64 1451.63 475.15 1459.94 466.40 C 1468.25 457.66 1479.65 453.28 1494.14 453.28 C 1506.76 453.28 1516.76 456.41 1524.13 462.65 C 1532.75 469.90 1537.07 479.89 1537.07 492.64 "/><path fill-rule="nonzero" d="M 1560.49 455.53 L 1593.10 455.53 L 1593.10 541.93 C 1593.10 546.93 1594.26 550.40 1596.57 552.33 C 1598.88 554.27 1603.04 555.24 1609.03 555.24 L 1632.09 555.24 L 1632.09 586.73 L 1606.03 586.73 C 1590.41 586.73 1578.92 583.38 1571.55 576.70 C 1564.17 570.01 1560.49 559.55 1560.49 545.30 Z M 1560.49 455.53 "/><path fill-rule="nonzero" d="M 1699.56 455.53 L 1718.87 455.53 L 1718.87 485.89 L 1715.68 485.89 C 1702.56 485.89 1693.25 487.39 1687.75 490.39 C 1683.37 492.76 1679.19 498.26 1675.19 506.88 L 1718.87 506.88 L 1718.87 535.37 L 1675.19 535.37 C 1678.57 543.37 1682.35 548.74 1686.53 551.49 C 1690.72 554.24 1697.25 555.80 1706.12 556.17 C 1708.62 556.30 1712.87 556.36 1718.87 556.36 L 1718.87 586.73 L 1699.56 586.73 C 1682.82 586.73 1668.76 580.45 1657.39 567.89 C 1646.02 555.33 1640.33 539.75 1640.33 521.13 C 1640.33 502.64 1645.98 487.08 1657.30 474.46 C 1668.60 461.84 1682.69 455.53 1699.56 455.53 "/></g></svg>';
+
+const $ = sel => document.querySelector(sel);
+const guardar = (k, v) => { try { localStorage.setItem('oficina.' + k, JSON.stringify(v)); } catch (e) {} };
+const leer = (k, def) => { try { const v = localStorage.getItem('oficina.' + k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } };
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// ============================================================
+//  SONIDOS (sintetizados, sin archivos)
+// ============================================================
+let audio = null;
+function sonar(tipo) {
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+    const notas = { si: [523, 784], no: [392, 262], creativo: [523, 659, 784, 1047], nivel: [523, 659, 784, 1047, 1319],
+      paso: [880], abrir: [660, 880], error: [220, 180], click: [740] }[tipo] || [600];
+    notas.forEach((f, i) => {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = tipo === 'error' ? 'sawtooth' : 'square';
+      o.frequency.value = f;
+      const t = audio.currentTime + i * 0.07;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.06, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      o.connect(g).connect(audio.destination);
+      o.start(t); o.stop(t + 0.16);
+    });
+  } catch (e) {}
+}
+
+// ============================================================
+//  AVISOS
+// ============================================================
+function avisar(texto, malo) {
+  const d = document.createElement('div');
+  d.className = 'aviso-toast' + (malo ? ' mal' : '');
+  d.textContent = texto;
+  $('#avisos').appendChild(d);
+  setTimeout(() => d.remove(), malo ? 5200 : 3200);
+}
+function xpFlotante(n) {
+  if (!n) return;
+  const d = document.createElement('div');
+  d.className = 'xp-flota';
+  d.textContent = '+' + n + ' XP';
+  d.style.left = (window.innerWidth / 2 - 50) + 'px';
+  d.style.top = (window.innerHeight / 2 - 120) + 'px';
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1200);
+}
+
+// ============================================================
+//  CONEXIÓN CON LA OFICINA (Apps Script) + MODO DEMO
+// ============================================================
+let pin = leer('pin', '');
+
+async function api(params) {
+  if (DEMO) return demoApi(params);
+  const url = API_URL + '?' + new URLSearchParams(Object.assign({}, params, { pin: pin, t: Date.now() })).toString();
+  let r;
+  try {
+    r = await fetch(url, { redirect: 'follow' });
+  } catch (e) {
+    marcarConexion(false);
+    throw new Error('Sin conexión con la oficina. Revisa el Wi-Fi.');
+  }
+  let j;
+  try { j = await r.json(); } catch (e) { marcarConexion(false); throw new Error('La oficina respondió algo inesperado. ¿Está publicada como aplicación web para "Cualquier usuario"?'); }
+  marcarConexion(true);
+  if (!j.ok) {
+    const err = new Error(j.error || 'Error de la oficina.');
+    err.pinMalo = j.pinMalo;
+    throw err;
+  }
+  return j;
+}
+function marcarConexion(ok) { const c = $('#conexion'); c.classList.toggle('ok', ok); c.classList.toggle('mal', !ok); }
+
+// ---- Datos de ejemplo para el modo demo ----
+const demo = {
+  jugador: { xp: 40, nivel: 1, titulo: 'Becario', progreso: 67, xpSiguiente: 60, racha: 2 },
+  agentes: {
+    Radar: { estado: 'Listo', detalle: '101 noticias nuevas de 56 fuentes (ejemplo).' },
+    Filtro: { estado: 'Trabajando', detalle: 'Evaluando noticias nuevas… (ejemplo)' },
+    Cazatendencias: { estado: 'Listo', detalle: '354 publicaciones guardadas (ejemplo).' },
+    Analista: { estado: 'Listo', detalle: '4 tendencias detectadas (ejemplo).' },
+    Creativo: { estado: 'Error', detalle: 'Ejemplo de error: Gemini no respondió (HTTP 429).' }
+  },
+  cartas: {
+    noticias: [
+      { id: 'd1', titulo: 'EJEMPLO · Una red social cambia cómo cuenta las vistas de los reels', puntaje: 91, area: 'Redes sociales', tipo: 'Noticia', fuente: 'Fuente de ejemplo', enlace: 'https://example.com', angulo: 'Qué significa el cambio para las métricas que reportan los negocios dominicanos.', porque: 'Afecta directamente cómo medimos resultados.', riesgo: 'Ninguno', resumen: 'Texto de ejemplo para el modo demo.' },
+      { id: 'd2', titulo: 'EJEMPLO · 5 errores de community management que alejan clientes', puntaje: 84, area: 'Community management', tipo: 'Tip o guía', fuente: 'Blog de ejemplo', enlace: 'https://example.com', angulo: 'Carrusel con los errores más comunes en negocios de RD y cómo evitarlos.', porque: 'Útil, práctico y fácil de convertir en carrusel.', riesgo: 'Ninguno', resumen: 'Texto de ejemplo.' },
+      { id: 'd3', titulo: 'EJEMPLO · Nueva herramienta de IA para editar video corto', puntaje: 76, area: 'IA aplicada al marketing', tipo: 'Tendencia', fuente: 'Fuente de ejemplo', enlace: 'https://example.com', angulo: 'Probarla en un reel de la oficina y contar el resultado.', porque: 'Demostración visual con buen potencial.', riesgo: 'Bajo: verificar precio y disponibilidad en RD', resumen: 'Texto de ejemplo.' }
+    ],
+    tendencias: [
+      { id: 't1', titulo: 'EJEMPLO · Tutoriales de 3 pasos con texto grande', red: 'TikTok', queEs: 'Videos cortos que resuelven un problema en tres pasos.', porQue: 'Se guardan y comparten mucho.', comoUsarla: 'Serie "3 pasos" con tips de redes para negocios.', formato: 'Reel', puntaje: 88, evidencia: ['https://example.com'] }
+    ],
+    piezas: [
+      { id: 'p1', titulo: 'EJEMPLO · Errores de community management', formato: 'Carrusel', origen: 'Noticia', gancho: '¿Tu negocio responde así en redes? Estás perdiendo clientes.', contenido: 'Lámina 1: Portada con el gancho\n\nLámina 2: Error 1 — Responder tarde\n\nLámina 3: Error 2 — Respuestas copiadas\n\nLámina 4: Cierre y llamado a la acción', copy: 'Texto de ejemplo para el copy…', hashtags: '#MarketingDigital #EmprendedoresRD', cta: 'Guárdalo para tu equipo', brief: 'Fondo claro, tipografía grande, iconos simples.', audio: 'No aplica', verificar: 'Nada pendiente.', enlace: 'https://example.com' }
+    ]
+  }
+};
+function demoApi(p) {
+  return new Promise(res => setTimeout(() => {
+    marcarConexion(true);
+    if (p.accion === 'hola') return res({ ok: true, jugador: demo.jugador });
+    if (p.accion === 'estado') return res({ ok: true, agentes: demo.agentes, jugador: demo.jugador,
+      contadores: { noticias: demo.cartas.noticias.length, tendencias: demo.cartas.tendencias.length, piezas: demo.cartas.piezas.length } });
+    if (p.accion === 'cartas') return res({ ok: true, cartas: demo.cartas[p.tipo].slice() });
+    if (p.accion === 'decidir') {
+      demo.cartas[p.tipo] = demo.cartas[p.tipo].filter(c => c.id !== p.id);
+      const gana = { si: 10, no: 10, creativo: 15, aprobar: 20, descartar: 10, producida: 25 }[p.decision] || 5;
+      const antes = demo.jugador.nivel;
+      demo.jugador.xp += gana;
+      demo.jugador.nivel = Math.floor(Math.sqrt(demo.jugador.xp / 60)) + 1;
+      demo.jugador.titulo = ['Becario', 'Junior', 'Community Manager', 'Estratega', 'Director Creativo'][Math.min(demo.jugador.nivel - 1, 4)];
+      const base = Math.pow(demo.jugador.nivel - 1, 2) * 60, sig = Math.pow(demo.jugador.nivel, 2) * 60;
+      demo.jugador.progreso = Math.round((demo.jugador.xp - base) / (sig - base) * 100);
+      return res({ ok: true, jugador: Object.assign({}, demo.jugador), subioNivel: demo.jugador.nivel > antes, xpGanada: gana });
+    }
+    if (p.accion === 'correr') {
+      demo.agentes[p.agente === 'Recoger' ? 'Cazatendencias' : p.agente] = { estado: 'Trabajando', detalle: 'Trabajando… (ejemplo)' };
+      setTimeout(() => { demo.agentes[p.agente === 'Recoger' ? 'Cazatendencias' : p.agente] = { estado: 'Listo', detalle: 'Terminó (ejemplo).' }; }, 6000);
+      demo.jugador.xp += 5;
+      return res({ ok: true, jugador: demo.jugador });
+    }
+    res({ ok: false, error: 'Acción desconocida (demo).' });
+  }, 220));
+}
+
+// ============================================================
+//  CONTROLES: Joy-Con (Gamepad API) + teclado + toque
+// ============================================================
+const ACCIONES = ['A', 'B', 'X', 'Y', 'L', 'R', 'MENOS', 'MAS'];
+const NOMBRES_BOTON = { A: 'A', B: 'B', X: 'X', Y: 'Y', L: 'L', R: 'R', MENOS: '−', MAS: '+' };
+const MAPA_ESTANDAR = { A: { t: 'b', i: 1 }, B: { t: 'b', i: 0 }, X: { t: 'b', i: 3 }, Y: { t: 'b', i: 2 }, L: { t: 'b', i: 4 }, R: { t: 'b', i: 5 }, MENOS: { t: 'b', i: 8 }, MAS: { t: 'b', i: 9 } };
+let mapa = leer('controles', null);
+const teclas = new Set();
+const TECLAS = {
+  A: ['Enter', ' '], B: ['Backspace', 'Delete', 'n'], X: ['x'], Y: ['y'], L: ['q'], R: ['e'], MENOS: ['Escape'], MAS: ['p'],
+  ARRIBA: ['ArrowUp', 'w'], ABAJO: ['ArrowDown', 's'], IZQ: ['ArrowLeft', 'a'], DER: ['ArrowRight', 'd']
+};
+const colaTeclas = [];
+addEventListener('keydown', e => {
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  teclas.add(k);
+  // Las pulsaciones de teclado se encolan para no perder ninguna aunque sean muy rápidas
+  Object.keys(TECLAS).forEach(a => { if (TECLAS[a].includes(k) && (!e.repeat || ['ARRIBA', 'ABAJO', 'IZQ', 'DER'].includes(a))) colaTeclas.push(a); });
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Backspace'].includes(e.key)) e.preventDefault();
+  if (pantalla === 'pin' && /^[0-9]$/.test(e.key)) pinTeclear(e.key);
+});
+addEventListener('keyup', e => teclas.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key));
+addEventListener('blur', () => teclas.clear());
+
+function mandos() { return Array.from(navigator.getGamepads ? navigator.getGamepads() : []).filter(Boolean); }
+function valorEntrada(m, pads) {
+  if (!m) return false;
+  return pads.some(p => {
+    if (m.t === 'b') { const b = p.buttons[m.i]; return !!b && (b.pressed || b.value > 0.5); }
+    if (m.t === 'e') { const v = p.axes[m.i]; return v !== undefined && v * m.s > 0.6; }
+    return false;
+  });
+}
+function leerEntradas() {
+  const pads = mandos();
+  const m = mapa || MAPA_ESTANDAR;
+  const estado = {};
+  ACCIONES.forEach(a => { estado[a] = valorEntrada(m[a], pads); });
+  // Dirección: palanca izquierda + cruceta (botones 12-15 o eje "hat" 6/7) + teclado
+  let x = 0, y = 0;
+  pads.forEach(p => {
+    const ax = p.axes[0] || 0, ay = p.axes[1] || 0;
+    if (Math.hypot(ax, ay) > 0.25 && Math.hypot(ax, ay) > Math.hypot(x, y)) { x = ax; y = ay; }
+    const b = i => p.buttons[i] && p.buttons[i].pressed;
+    if (b(12)) y = -1; if (b(13)) y = 1; if (b(14)) x = -1; if (b(15)) x = 1;
+    if (p.mapping !== 'standard' && p.axes.length >= 8) {
+      if (Math.abs(p.axes[6]) > 0.5) x = Math.sign(p.axes[6]);
+      if (Math.abs(p.axes[7]) > 0.5) y = Math.sign(p.axes[7]);
+    }
+  });
+  // direcciones del mando (para menús); el teclado llega por la cola
+  estado.ARRIBA = y < -0.6; estado.ABAJO = y > 0.6; estado.IZQ = x < -0.6; estado.DER = x > 0.6;
+  // movimiento: mando + teclado mantenido
+  if (TECLAS.ARRIBA.some(k => teclas.has(k))) y = -1;
+  if (TECLAS.ABAJO.some(k => teclas.has(k))) y = 1;
+  if (TECLAS.IZQ.some(k => teclas.has(k))) x = -1;
+  if (TECLAS.DER.some(k => teclas.has(k))) x = 1;
+  estado.x = x; estado.y = y;
+  return estado;
+}
+let previo = {};
+let repetir = {};
+function pulsaciones(estado, ahora) {
+  // Devuelve las acciones recién presionadas (las flechas se repiten si se mantienen)
+  const nuevas = [];
+  ACCIONES.forEach(a => { if (estado[a] && !previo[a]) nuevas.push(a); });
+  ['ARRIBA', 'ABAJO', 'IZQ', 'DER'].forEach(d => {
+    if (estado[d] && !previo[d]) { nuevas.push(d); repetir[d] = ahora + 380; }
+    else if (estado[d] && ahora > (repetir[d] || 0)) { nuevas.push(d); repetir[d] = ahora + 130; }
+  });
+  previo = estado;
+  while (colaTeclas.length) nuevas.push(colaTeclas.shift());
+  return nuevas;
+}
+
+// Toque / clic sobre las ayudas de botones
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-accion]');
+  if (el) { sonar('click'); manejar(el.dataset.accion); }
+});
+
+// ---- Calibración ----
+let calib = null;
+function iniciarCalibracion() {
+  calib = { paso: 0, mapa: {}, base: null, espera: 0 };
+  mostrarPantalla('calibrar');
+  pintarCalibracion();
+}
+function pintarCalibracion() {
+  const a = ACCIONES[calib.paso];
+  const colores = { A: ['var(--lima)', 'var(--verde)'], B: ['var(--verde)', '#fff'], X: ['var(--turquesa)', 'var(--verde)'], Y: ['#fff', 'var(--verde)'] };
+  const c = colores[a] || ['rgba(2,38,30,.12)', 'var(--verde)'];
+  $('#calib-boton').textContent = NOMBRES_BOTON[a];
+  $('#calib-boton').style.background = c[0];
+  $('#calib-boton').style.color = c[1];
+  const txt = { A: 'Presiona el botón A (el de la derecha).', B: 'Presiona el botón B (el de abajo).', X: 'Presiona el botón X (el de arriba).',
+    Y: 'Presiona el botón Y (el de la izquierda).', L: 'Presiona el gatillo L (arriba a la izquierda).', R: 'Presiona el gatillo R (arriba a la derecha).',
+    MENOS: 'Presiona el botón − (menos).', MAS: 'Presiona el botón + (más).' }[a];
+  $('#calib-texto').textContent = txt;
+  $('#calib-progreso').innerHTML = ACCIONES.map((_, i) => '<i class="' + (i < calib.paso ? 'hecho' : '') + '"></i>').join('');
+}
+function fotoMandos() {
+  return mandos().map(p => ({ b: p.buttons.map(b => b.pressed || b.value > 0.5), e: p.axes.slice() }));
+}
+function pasoCalibracion(ahora) {
+  if (ahora < calib.espera) return;
+  const actual = fotoMandos();
+  if (!calib.base) { calib.base = actual; return; }
+  let detectado = null;
+  actual.forEach((p, pi) => {
+    const base = calib.base[pi] || { b: [], e: [] };
+    p.b.forEach((v, i) => { if (!detectado && v && !base.b[i] && !(i >= 12 && i <= 15)) detectado = { t: 'b', i: i }; });
+    p.e.forEach((v, i) => { if (!detectado && i > 1 && Math.abs(v) > 0.75 && Math.abs(base.e[i] || 0) < 0.3) detectado = { t: 'e', i: i, s: Math.sign(v) }; });
+  });
+  // si todos están sueltos, actualiza la base (evita contar un botón que ya estaba presionado)
+  if (!detectado) { calib.base = actual; return; }
+  const repetido = Object.values(calib.mapa).some(m => m.t === detectado.t && m.i === detectado.i && (m.s || 0) === (detectado.s || 0));
+  if (repetido) { avisar('Ese botón ya lo asignaste. Presiona otro.', true); calib.espera = ahora + 500; calib.base = null; return; }
+  calib.mapa[ACCIONES[calib.paso]] = detectado;
+  sonar('click');
+  calib.paso++;
+  calib.base = null;
+  calib.espera = ahora + 350;
+  if (calib.paso >= ACCIONES.length) {
+    mapa = calib.mapa; guardar('controles', mapa); calib = null;
+    avisar('🎮 Controles listos.');
+    previo = leerEntradas();
+    salirDeCalibracion();
+  } else pintarCalibracion();
+}
+$('#calib-saltar').addEventListener('click', () => {
+  mapa = MAPA_ESTANDAR; guardar('controles', mapa); calib = null;
+  avisar('Usando controles estándar. Puedes recalibrar desde el Menú (+).');
+  salirDeCalibracion();
+});
+function salirDeCalibracion() { if (!DEMO && !pin) mostrarPantalla('pin'); else entrarOficina(); }
+addEventListener('gamepadconnected', () => {
+  avisar('🎮 Control conectado.');
+  if (!leer('controles', null) && pantalla !== 'calibrar') iniciarCalibracion();
+});
+
+// ============================================================
+//  PANTALLAS
+// ============================================================
+let pantalla = 'cargando';
+function mostrarPantalla(p) {
+  pantalla = p;
+  $('#pantalla-pin').classList.toggle('oculto', p !== 'pin');
+  $('#pantalla-calibrar').classList.toggle('oculto', p !== 'calibrar');
+  $('#pantalla-menu').classList.toggle('oculto', p !== 'menu');
+  $('#panel').classList.toggle('oculto', p !== 'panel');
+  $('#hud').classList.toggle('oculto', !(p === 'oficina' || p === 'panel'));
+  if (p !== 'oficina') $('#prompt').classList.add('oculto');
+}
+
+// ---- PIN ----
+const TECLAS_PIN = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', 'OK'];
+let pinTemp = '', pinFoco = 0;
+function pintarPin() {
+  $('#teclado').innerHTML = TECLAS_PIN.map((t, i) => '<button data-pin="' + t + '" class="' + (i === pinFoco ? 'foco' : '') + '">' + t + '</button>').join('');
+  Array.from($('#pin-cajas').children).forEach((d, i) => d.textContent = pinTemp[i] ? '●' : '');
+}
+$('#teclado').addEventListener('click', e => { const b = e.target.closest('[data-pin]'); if (b) pinTeclear(b.dataset.pin); });
+function pinTeclear(t) {
+  sonar('click');
+  if (t === '⌫') pinTemp = pinTemp.slice(0, -1);
+  else if (t === 'OK') { probarPin(); return; }
+  else if (pinTemp.length < 6) pinTemp += t;
+  pintarPin();
+  if (pinTemp.length === 6) probarPin();
+}
+async function probarPin() {
+  if (pinTemp.length !== 6) { $('#pin-error').textContent = 'El PIN tiene 6 dígitos.'; return; }
+  $('#pin-error').textContent = 'Entrando…';
+  const anterior = pin;
+  pin = pinTemp;
+  try {
+    await api({ accion: 'hola' });
+    guardar('pin', pin);
+    pinTemp = '';
+    $('#pin-error').textContent = '';
+    sonar('abrir');
+    entrarOficina();
+  } catch (e) {
+    pin = anterior;
+    pinTemp = '';
+    pintarPin();
+    sonar('error');
+    $('#pin-error').textContent = e.message;
+  }
+}
+function manejarPin(a) {
+  const col = pinFoco % 3, fila = Math.floor(pinFoco / 3);
+  if (a === 'IZQ' && col > 0) pinFoco--;
+  else if (a === 'DER' && col < 2) pinFoco++;
+  else if (a === 'ARRIBA' && fila > 0) pinFoco -= 3;
+  else if (a === 'ABAJO' && fila < 3) pinFoco += 3;
+  else if (a === 'A') { pinTeclear(TECLAS_PIN[pinFoco]); return; }
+  else if (a === 'B') { pinTeclear('⌫'); return; }
+  pintarPin();
+}
+
+// ---- Menú (+) ----
+let menuFoco = 0;
+const OPCIONES_MENU = () => [
+  { t: '▶ Continuar', f: () => mostrarPantalla('oficina') },
+  { t: '🎮 Configurar controles', f: iniciarCalibracion },
+  { t: '🖥 Pantalla completa', f: pantallaCompleta },
+  { t: '✨ Calidad gráfica: ' + (calidadAlta ? 'Alta' : 'Ahorro'), f: () => { calidadAlta = !calidadAlta; guardar('calidad', calidadAlta); aplicarCalidad(); pintarMenu(); } },
+  { t: '🔄 Actualizar la oficina', f: () => { refrescarEstado(); mostrarPantalla('oficina'); avisar('Actualizando…'); } },
+  { t: '🔑 Cerrar sesión (olvidar PIN)', f: () => { pin = ''; guardar('pin', ''); if (DEMO) { avisar('En modo demo no hay PIN.'); return; } mostrarPantalla('pin'); pintarPin(); } }
+];
+function abrirMenu() { menuFoco = 0; mostrarPantalla('menu'); pintarMenu(); sonar('abrir'); }
+function pintarMenu() {
+  $('#menu-opciones').innerHTML = OPCIONES_MENU().map((o, i) => '<button class="opcion ' + (i === menuFoco ? 'foco' : '') + '" data-menu="' + i + '">' + o.t + '</button>').join('');
+}
+$('#menu-opciones').addEventListener('click', e => { const b = e.target.closest('[data-menu]'); if (b) { menuFoco = +b.dataset.menu; OPCIONES_MENU()[menuFoco].f(); } });
+function manejarMenu(a) {
+  const n = OPCIONES_MENU().length;
+  if (a === 'ARRIBA') menuFoco = (menuFoco + n - 1) % n;
+  else if (a === 'ABAJO') menuFoco = (menuFoco + 1) % n;
+  else if (a === 'A') { OPCIONES_MENU()[menuFoco].f(); return; }
+  else if (a === 'B' || a === 'MENOS' || a === 'MAS') { mostrarPantalla('oficina'); return; }
+  pintarMenu();
+}
+function pantallaCompleta() {
+  const d = document.documentElement;
+  const f = d.requestFullscreen || d.webkitRequestFullscreen;
+  if (document.fullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+  if (f) f.call(d).catch(() => avisar('Toca la pantalla una vez y vuelve a intentarlo (el navegador pide un toque).', true));
+}
+
+// ============================================================
+//  ESCENA 3D — DIORAMA DE LA OFICINA EDITABLE
+// ============================================================
+const MARCA = { verde: 0x02261e, lima: 0xdafc92, turquesa: 0x89c9c9, hueso: 0xf2f7f9, negro: 0x0b1210 };
+let calidadAlta = leer('calidad', true);
+const renderer = new THREE.WebGLRenderer({ canvas: $('#escena'), antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setClearColor(0x000000, 0);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+const escena = new THREE.Scene();
+const camara = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.1, 200);
+const DESPLAZ_CAMARA = new THREE.Vector3(24, 21, 24);
+let zoom = 13;
+
+escena.add(new THREE.HemisphereLight(0xfff6ea, 0x3b5a52, 0.62));
+const sol = new THREE.DirectionalLight(0xffe7c4, 1.15);
+sol.castShadow = true;
+sol.shadow.camera.left = -26; sol.shadow.camera.right = 26; sol.shadow.camera.top = 22; sol.shadow.camera.bottom = -22;
+sol.shadow.camera.near = 1; sol.shadow.camera.far = 80;
+sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.02;
+sol.shadow.radius = 3;
+escena.add(sol); escena.add(sol.target);
+const relleno = new THREE.DirectionalLight(0x9fd6d6, 0.28);
+relleno.position.set(-20, 14, 18);
+escena.add(relleno);
+
+function aplicarCalidad() {
+  renderer.setPixelRatio(calidadAlta ? Math.min(devicePixelRatio || 1, 2) : 1);
+  sol.castShadow = calidadAlta;
+  const tam = calidadAlta ? 2048 : 1024;
+  sol.shadow.mapSize.set(tam, tam);
+  if (sol.shadow.map) { sol.shadow.map.dispose(); sol.shadow.map = null; }
+  ajustarTamano();
+}
+function ajustarTamano() {
+  const w = innerWidth, h = innerHeight, asp = w / h;
+  renderer.setSize(w, h, false);
+  camara.left = -zoom * asp; camara.right = zoom * asp; camara.top = zoom; camara.bottom = -zoom;
+  camara.updateProjectionMatrix();
+}
+addEventListener('resize', ajustarTamano);
+
+// ---------- Materiales ----------
+// Los colores de marca se pasan a espacio lineal para que se vean exactos en pantalla
+function lin(hex) { return new THREE.Color(hex).convertSRGBToLinear(); }
+function setLin(color, hex) { return color.setHex(hex).convertSRGBToLinear(); }
+const mats = {};
+function mate(color, opc) {
+  const k = color + JSON.stringify(opc || {});
+  if (!mats[k]) mats[k] = new THREE.MeshStandardMaterial(Object.assign({ color: lin(color), roughness: 0.62, metalness: 0.0 }, opc || {}));
+  return mats[k];
+}
+const C = {
+  piso: 0xe8dfd0, pisoLinea: 0xd8ccb8, pared: 0xf2f7f9, paredCorte: MARCA.verde, zocalo: 0xdbe6e6,
+  mesa: 0xfafaf7, pata: 0x22302c, pantallaMarco: 0x141a19, silla: 0x2c3b37, sillaAsiento: 0x89c9c9,
+  madera: 0xc9a27a, maceta: 0xf2f7f9, hoja: 0x3f8f5f, hoja2: 0x5fae6e, sofa: 0x0d3b30, alfombra: 0x89c9c9,
+  piel1: 0xf1c7a0, piel2: 0xc68b5e, piel3: 0x8d5a3b, piel4: 0xe0ac7e, pelo1: 0x2b1d16, pelo2: 0x5a3a22, pelo3: 0x111111
+};
+
+// Caja con bordes redondeados (se ve "de maqueta", no de ladrillos)
+const cacheGeo = {};
+function geoRedondeada(w, h, d, r) {
+  const k = [w, h, d, r].join('|');
+  if (cacheGeo[k]) return cacheGeo[k];
+  r = Math.min(r, w / 2 - 0.001, d / 2 - 0.001, h / 2 - 0.001);
+  const s = new THREE.Shape(), x = -w / 2 + r, y = -d / 2 + r, ww = w - 2 * r, dd = d - 2 * r;
+  s.moveTo(x, y - r);
+  s.lineTo(x + ww, y - r); s.quadraticCurveTo(x + ww + r, y - r, x + ww + r, y);
+  s.lineTo(x + ww + r, y + dd); s.quadraticCurveTo(x + ww + r, y + dd + r, x + ww, y + dd + r);
+  s.lineTo(x, y + dd + r); s.quadraticCurveTo(x - r, y + dd + r, x - r, y + dd);
+  s.lineTo(x - r, y); s.quadraticCurveTo(x - r, y - r, x, y - r);
+  const g = new THREE.ExtrudeGeometry(s, { depth: Math.max(0.001, h - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: 0, bevelSegments: 3, curveSegments: 6 });
+  g.rotateX(-Math.PI / 2);
+  g.translate(0, -(h - 2 * r) / 2, 0);
+  g.computeVertexNormals();
+  cacheGeo[k] = g;
+  return g;
+}
+function caja(w, h, d, color, x, y, z, opc) {
+  opc = opc || {};
+  const g = opc.r === 0 ? new THREE.BoxGeometry(w, h, d) : geoRedondeada(w, h, d, opc.r == null ? 0.08 : opc.r);
+  const m = new THREE.Mesh(g, opc.mat || mate(color, opc.m));
+  m.position.set(x, y + h / 2, z);
+  m.castShadow = opc.sombra !== false; m.receiveShadow = true;
+  (opc.padre || escena).add(m);
+  return m;
+}
+function cilindro(r1, r2, h, color, x, y, z, opc) {
+  opc = opc || {};
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, opc.seg || 24), opc.mat || mate(color, opc.m));
+  m.position.set(x, y + h / 2, z);
+  m.castShadow = opc.sombra !== false; m.receiveShadow = true;
+  (opc.padre || escena).add(m);
+  return m;
+}
+
+// Sombra suave de contacto (da la sensación de maqueta bien iluminada)
+const TEX_SOMBRA = (() => {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const x = cv.getContext('2d'), g = x.createRadialGradient(64, 64, 4, 64, 64, 64);
+  g.addColorStop(0, 'rgba(2,38,30,0.42)'); g.addColorStop(0.6, 'rgba(2,38,30,0.14)'); g.addColorStop(1, 'rgba(2,38,30,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(cv);
+})();
+function sombraSuave(x, z, w, d, padre) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshBasicMaterial({ map: TEX_SOMBRA, transparent: true, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.position.set(x, 0.02, z); m.renderOrder = 1;
+  (padre || escena).add(m);
+  return m;
+}
+
+// ---------- Texturas de texto y de logo ----------
+function pastilla(texto, opc) {
+  opc = Object.assign({ ancho: 512, alto: 120, fondo: '#02261e', color: '#dafc92', tam: 54, fuente: '600 54px "Roboto Mono", monospace', radio: 60, borde: null }, opc || {});
+  const cv = document.createElement('canvas'); cv.width = opc.ancho; cv.height = opc.alto;
+  const x = cv.getContext('2d');
+  const r = Math.min(opc.radio, opc.alto / 2 - 4);
+  x.fillStyle = opc.fondo;
+  x.beginPath(); x.moveTo(r + 4, 4); x.arcTo(opc.ancho - 4, 4, opc.ancho - 4, opc.alto - 4, r); x.arcTo(opc.ancho - 4, opc.alto - 4, 4, opc.alto - 4, r);
+  x.arcTo(4, opc.alto - 4, 4, 4, r); x.arcTo(4, 4, opc.ancho - 4, 4, r); x.closePath(); x.fill();
+  if (opc.borde) { x.lineWidth = 8; x.strokeStyle = opc.borde; x.stroke(); }
+  x.fillStyle = opc.color; x.font = opc.fuente; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(texto, opc.ancho / 2, opc.alto / 2 + 2);
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
+  return t;
+}
+function etiqueta(texto, alto, opc) {
+  opc = opc || {};
+  const t = pastilla(texto, opc);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true }));
+  const prop = (opc.ancho || 512) / (opc.alto || 120);
+  sp.scale.set(alto * prop, alto, 1);
+  sp.renderOrder = 20;
+  return sp;
+}
+function svgColor(svg, color) { return svg.replace('fill="COLOR"', 'fill="' + color + '"'); }
+function texturaLogo(cb) {
+  // Panel del muro: isotipo + logotipo en lima sobre verde profundo
+  const cv = document.createElement('canvas'); cv.width = 1600; cv.height = 520;
+  const x = cv.getContext('2d');
+  x.fillStyle = '#02261e'; x.fillRect(0, 0, cv.width, cv.height);
+  const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
+  const a = new Image(), b = new Image();
+  let listos = 0;
+  const pintar = () => {
+    if (++listos < 2) return;
+    x.drawImage(a, 120, 150, 400, 202);
+    x.drawImage(b, 600, 178, 880, 162);
+    x.fillStyle = '#89c9c9'; x.font = '600 46px "Roboto Mono", monospace'; x.textAlign = 'left';
+    x.fillText('AI OFFICE', 604, 420);
+    tex.needsUpdate = true; if (cb) cb();
+  };
+  a.onload = pintar; b.onload = pintar;
+  a.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgColor(SVG_ISOTIPO, '#dafc92'));
+  b.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgColor(SVG_LOGOTIPO, '#dafc92'));
+  return tex;
+}
+function texturaPiso() {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 1024;
+  const x = cv.getContext('2d');
+  x.fillStyle = '#e8dfd0'; x.fillRect(0, 0, 1024, 1024);
+  for (let i = 0; i < 16; i++) {
+    const y = i * 64;
+    x.fillStyle = i % 2 ? 'rgba(160,130,95,0.06)' : 'rgba(255,255,255,0.05)';
+    x.fillRect(0, y, 1024, 64);
+    x.fillStyle = 'rgba(120,95,65,0.18)'; x.fillRect(0, y, 1024, 2);
+    const corte = (i * 397) % 1024;
+    x.fillRect(corte, y, 2, 64); x.fillRect((corte + 512) % 1024, y, 2, 64);
+  }
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8;
+  t.repeat.set(2.2, 1.6);
+  return t;
+}
+
+// ---------- La oficina ----------
+const ANCHO = 32, FONDO = 24;              // tamaño del piso
+const X0 = -16, X1 = 16, Z0 = -12, Z1 = 12; // bordes
+const ALTO_MURO = 6.2;
+function construirOficina() {
+  // Base de la maqueta: losa con canto verde Editable
+  caja(ANCHO + 0.6, 1.2, FONDO + 0.6, MARCA.verde, 0, -1.45, 0, { r: 0.3 });
+  const piso = new THREE.Mesh(new THREE.BoxGeometry(ANCHO, 0.2, FONDO), new THREE.MeshStandardMaterial({ map: texturaPiso(), roughness: 0.8 }));
+  piso.position.set(0, -0.1, 0); piso.receiveShadow = true; escena.add(piso);
+
+  // Muros (fondo e izquierdo) con canto verde, zócalo y ventanales
+  const muro = (w, d, x, z) => {
+    caja(w, ALTO_MURO, d, C.pared, x, 0, z, { r: 0.04 });
+    caja(w + 0.02, 0.18, d + 0.02, MARCA.verde, x, ALTO_MURO - 0.18, z, { r: 0.04, sombra: false });
+  };
+  muro(ANCHO, 0.6, 0, Z0 + 0.3);
+  muro(0.6, FONDO - 0.6, X0 + 0.3, 0.3);
+  caja(ANCHO - 0.6, 0.35, 0.08, C.zocalo, 0.3, 0, Z0 + 0.64, { r: 0.02, sombra: false });
+  caja(0.08, 0.35, FONDO - 1.2, C.zocalo, X0 + 0.64, 0, 0.6, { r: 0.02, sombra: false });
+  // Ventanales en el muro izquierdo (luz turquesa suave)
+  [-6.5, 3.5].forEach(z => {
+    caja(0.12, 3.4, 5.2, MARCA.verde, X0 + 0.62, 1.4, z, { r: 0.05, sombra: false });
+    const vidrio = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 3.0), new THREE.MeshBasicMaterial({ color: lin(0xcfeeee) }));
+    vidrio.rotation.y = Math.PI / 2; vidrio.position.set(X0 + 0.69, 2.9, z); escena.add(vidrio);
+    const marco = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 3.0), new THREE.MeshBasicMaterial({ color: lin(MARCA.verde) }));
+    marco.rotation.y = Math.PI / 2; marco.position.set(X0 + 0.7, 2.9, z); escena.add(marco);
+    const haz = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 9), new THREE.MeshBasicMaterial({ color: 0xfff3d6, transparent: true, opacity: 0.07, depthWrite: false, side: THREE.DoubleSide }));
+    haz.rotation.x = -Math.PI / 2; haz.rotation.z = Math.PI / 2; haz.position.set(X0 + 5, 0.03, z); escena.add(haz);
+  });
+  // Panel del logo
+  const panel = caja(13, 3.6, 0.22, MARCA.verde, 0, 2.0, Z0 + 0.75, { r: 0.08 });
+  const logo = new THREE.Mesh(new THREE.PlaneGeometry(12.2, 3.96 * (12.2 / 12.2) * 0.83), new THREE.MeshBasicMaterial({ map: texturaLogo(), toneMapped: false }));
+  logo.position.set(0, 3.8, Z0 + 0.87); escena.add(logo);
+  // Repisa con libros y premios en el muro izquierdo
+  caja(0.5, 0.12, 5, C.madera, X0 + 0.9, 4.6, -0.5, { r: 0.03 });
+  [[-2.6, 0x89c9c9, 0.9], [-2.2, 0xdafc92, 1.1], [-1.85, 0x02261e, 0.8], [-1.5, 0xf2f7f9, 1.0], [0.4, 0x89c9c9, 0.7]].forEach(([dz, col, h]) =>
+    caja(0.36, h, 0.3, col, X0 + 0.95, 4.72, -0.5 + dz + 2, { r: 0.03 }));
+  cilindro(0.18, 0.24, 0.5, 0xdafc92, X0 + 0.95, 4.72, 1.4, {});
+  // Sala: alfombra, sofá, mesa de centro y planta
+  const alf = caja(8.5, 0.06, 6.2, C.alfombra, -9.6, 0, 6.4, { r: 0.03, sombra: false });
+  alf.material = mate(C.alfombra, { roughness: 0.95 });
+  caja(7.2, 1.0, 2.2, C.sofa, -10.2, 0, 9.4, { r: 0.35 });
+  caja(7.2, 1.6, 0.7, C.sofa, -10.2, 0.6, 10.3, { r: 0.3 });
+  caja(0.8, 1.4, 2.2, C.sofa, -14.1, 0.2, 9.4, { r: 0.3 }); caja(0.8, 1.4, 2.2, C.sofa, -6.3, 0.2, 9.4, { r: 0.3 });
+  [-12.2, -10.2, -8.2].forEach(x => caja(1.8, 0.35, 1.7, MARCA.turquesa, x, 1.0, 9.2, { r: 0.15 }));
+  cilindro(1.4, 1.4, 0.12, C.madera, -10, 1.0, 5.6, {}); cilindro(0.12, 0.12, 1.0, C.pata, -10, 0, 5.6, {});
+  sombraSuave(-10, 5.6, 4, 4);
+  caja(1.1, 0.12, 0.8, MARCA.lima, -10.2, 1.12, 5.5, { r: 0.04 }); // revista
+  planta(-14.4, 3.6, 1.2); planta(14.3, -10.2, 1.4); planta(-14.3, -10.2, 1.1); planta(14.4, 10.4, 1.3); planta(4.5, 10.6, 0.9);
+  // Barra de café
+  caja(2.0, 2.2, 6.0, MARCA.verde, 14.4, 0, 2.5, { r: 0.12 });
+  caja(2.2, 0.15, 6.2, C.madera, 14.4, 2.2, 2.5, { r: 0.05 });
+  caja(1.0, 1.1, 0.9, 0x1b1f1e, 14.4, 2.35, 1.0, { r: 0.12 });
+  [3.0, 3.6].forEach(z => cilindro(0.18, 0.15, 0.36, 0xf2f7f9, 14.3, 2.35, z, {}));
+  // Lámparas colgantes sobre los escritorios
+  ESTACIONES_POS.forEach(p => lampara(p.x, p.z - 0.8));
+}
+function planta(x, z, s) {
+  cilindro(0.55 * s, 0.42 * s, 1.1 * s, C.maceta, x, 0, z, {});
+  sombraSuave(x, z, 2.6 * s, 2.6 * s);
+  const g = new THREE.Group(); g.position.set(x, 1.1 * s, z); escena.add(g);
+  for (let i = 0; i < 7; i++) {
+    const h = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55 * s, 0), mate(i % 2 ? C.hoja : C.hoja2, { flatShading: true }));
+    const ang = i / 7 * Math.PI * 2;
+    h.position.set(Math.cos(ang) * 0.45 * s, (0.5 + (i % 3) * 0.35) * s, Math.sin(ang) * 0.45 * s);
+    h.scale.set(0.8, 1.3, 0.8); h.rotation.set(i, i * 2, 0);
+    h.castShadow = true; g.add(h);
+  }
+}
+function lampara(x, z) {
+  const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 3.2, 6), mate(C.pata));
+  cable.position.set(x, 8.6, z); escena.add(cable);
+  const pantalla = new THREE.Mesh(new THREE.ConeGeometry(0.75, 0.6, 24, 1, true), mate(MARCA.verde, { side: THREE.DoubleSide }));
+  pantalla.position.set(x, 6.9, z); escena.add(pantalla);
+  const foco = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 8), new THREE.MeshBasicMaterial({ color: lin(0xfff1c9) }));
+  foco.position.set(x, 6.62, z); escena.add(foco);
+}
+
+// ---------- Personajes estilizados ----------
+function personaje(colorRopa, piel, pelo, estilo, acento) {
+  const raiz = new THREE.Group();
+  const cuerpo = new THREE.Group(); raiz.add(cuerpo);
+  const sombra = m => { m.castShadow = true; m.receiveShadow = true; return m; };
+  // pies
+  const pies = [-0.24, 0.24].map(px => {
+    const p = sombra(new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 10), mate(0x1b2422)));
+    p.scale.set(1, 0.7, 1.35); p.position.set(px, 0.15, 0.05); raiz.add(p); return p;
+  });
+  // torso (cápsula)
+  const tor = new THREE.Group(); tor.position.y = 1.15; cuerpo.add(tor);
+  tor.add(sombra(new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.6, 0.8, 24), mate(colorRopa))));
+  const top = sombra(new THREE.Mesh(new THREE.SphereGeometry(0.56, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mate(colorRopa))); top.position.y = 0.4; tor.add(top);
+  const base = sombra(new THREE.Mesh(new THREE.SphereGeometry(0.6, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mate(colorRopa))); base.position.y = -0.4; tor.add(base);
+  if (acento) { const cuello = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.07, 8, 20), mate(acento)); cuello.rotation.x = Math.PI / 2; cuello.position.y = 0.86; tor.add(cuello); }
+  // brazos
+  const brazos = [-1, 1].map(l => {
+    const piv = new THREE.Group(); piv.position.set(l * 0.6, 1.62, 0);
+    const b = sombra(new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.62, 12), mate(colorRopa))); b.position.y = -0.32; piv.add(b);
+    const mano = sombra(new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 10), mate(piel))); mano.position.y = -0.68; piv.add(mano);
+    piv.rotation.z = l * 0.12; cuerpo.add(piv); return piv;
+  });
+  // cabeza
+  const cabeza = new THREE.Group(); cabeza.position.y = 2.32; cuerpo.add(cabeza);
+  cabeza.add(sombra(new THREE.Mesh(new THREE.SphereGeometry(0.55, 28, 20), mate(piel))));
+  [-0.19, 0.19].forEach(ex => { const o = new THREE.Mesh(new THREE.SphereGeometry(0.065, 10, 8), mate(0x111111, { roughness: 0.3 })); o.position.set(ex, 0.04, 0.5); cabeza.add(o); });
+  const mejilla = mate(0xf29b8f, { transparent: true, opacity: 0.45 });
+  [-0.3, 0.3].forEach(ex => { const m = new THREE.Mesh(new THREE.CircleGeometry(0.08, 12), mejilla); m.position.set(ex, -0.12, 0.505); cabeza.add(m); });
+  if (estilo === 'corto' || estilo === 'gorra' || estilo === 'audifonos' || estilo === 'lentes') {
+    const p = sombra(new THREE.Mesh(new THREE.SphereGeometry(0.58, 28, 14, 0, Math.PI * 2, 0, Math.PI * 0.42), mate(pelo))); p.position.y = 0.04; p.rotation.x = -0.25; cabeza.add(p);
+  }
+  if (estilo === 'largo') {
+    const p = sombra(new THREE.Mesh(new THREE.SphereGeometry(0.6, 28, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), mate(pelo))); p.position.y = 0.02; p.rotation.x = -0.35; cabeza.add(p);
+    const cola = sombra(new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 12), mate(pelo))); cola.position.set(0, -0.15, -0.5); cola.scale.set(1, 1.4, 0.8); cabeza.add(cola);
+  }
+  if (estilo === 'rizado') {
+    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; const r = sombra(new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), mate(pelo))); r.position.set(Math.cos(a) * 0.42, 0.32 + (i % 2) * 0.08, Math.sin(a) * 0.36 - 0.08); cabeza.add(r); }
+  }
+  if (estilo === 'gorra') {
+    const g = sombra(new THREE.Mesh(new THREE.SphereGeometry(0.6, 28, 14, 0, Math.PI * 2, 0, Math.PI * 0.45), mate(acento || MARCA.verde))); g.position.y = 0.06; cabeza.add(g);
+    const v = sombra(new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.06, 24, 1, false, -Math.PI / 2, Math.PI), mate(acento || MARCA.verde))); v.position.set(0, 0.24, 0.32); cabeza.add(v);
+  }
+  if (estilo === 'audifonos') {
+    const arco = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.06, 8, 24, Math.PI), mate(0x1b2422)); arco.position.y = 0.05; cabeza.add(arco);
+    [-1, 1].forEach(l => { const o = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.14, 16), mate(acento || MARCA.lima)); o.rotation.z = Math.PI / 2; o.position.set(l * 0.6, 0.0, 0); cabeza.add(o); });
+  }
+  if (estilo === 'lentes') {
+    [-0.19, 0.19].forEach(ex => { const l = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.025, 6, 18), mate(0x111111)); l.position.set(ex, 0.05, 0.52); cabeza.add(l); });
+  }
+  raiz.userData = { cuerpo, brazos, pies, cabeza, tor };
+  return raiz;
+}
+
+// ---------- Estaciones de los agentes ----------
+const ESTACIONES_POS = [{ x: -9.5, z: -7.6 }, { x: -2.5, z: -7.6 }, { x: 4.5, z: -7.6 }, { x: 11, z: -7.6 }];
+const ESTACIONES = [
+  { id: 'Radar', nombre: 'Radar', icono: '📡', x: -9.5, z: -7.6, ropa: 0x1f6f6f, piel: C.piel4, pelo: C.pelo1, estilo: 'audifonos', acento: MARCA.lima,
+    acciones: [{ b: 'A', t: 'Buscar noticias', f: () => correr('Radar') }, { b: 'X', t: 'Ver estado', f: () => verEstado('Radar') }] },
+  { id: 'Filtro', nombre: 'Filtro', icono: '🧠', x: -2.5, z: -7.6, ropa: 0x3c4a8c, piel: C.piel2, pelo: C.pelo3, estilo: 'lentes', acento: null,
+    acciones: [{ b: 'A', t: 'Mesa de noticias', f: () => abrirPanel('noticias') }, { b: 'Y', t: 'Filtrar ahora', f: () => correr('Filtro') }, { b: 'X', t: 'Ver estado', f: () => verEstado('Filtro') }] },
+  { id: 'Cazatendencias', nombre: 'Cazatendencias', icono: '🔥', x: 4.5, z: -7.6, ropa: 0xe0703a, piel: C.piel1, pelo: C.pelo2, estilo: 'gorra', acento: MARCA.verde,
+    acciones: [{ b: 'A', t: 'Cazar tendencias', f: () => confirmarCaza() }, { b: 'Y', t: 'Recoger resultados', f: () => correr('Recoger') }, { b: 'X', t: 'Ver estado', f: () => verEstado('Cazatendencias') }] },
+  { id: 'Analista', nombre: 'Analista', icono: '🔎', x: 11, z: -7.6, ropa: 0x89c9c9, piel: C.piel3, pelo: C.pelo1, estilo: 'rizado', acento: null,
+    acciones: [{ b: 'A', t: 'Pizarra de tendencias', f: () => abrirPanel('tendencias') }, { b: 'Y', t: 'Analizar último lote', f: () => correr('Analista') }, { b: 'X', t: 'Ver estado', f: () => verEstado('Analista') }] },
+  { id: 'Creativo', nombre: 'Creativo', icono: '✍️', x: 3.0, z: 5.6, ropa: 0xc2410c, piel: C.piel4, pelo: C.pelo2, estilo: 'largo', acento: null, estudio: true,
+    acciones: [{ b: 'A', t: 'Revisar piezas', f: () => abrirPanel('piezas') }, { b: 'Y', t: 'Crear piezas ahora', f: () => correr('Creativo') }, { b: 'X', t: 'Ver estado', f: () => verEstado('Creativo') }] }
+];
+const COLOR_ESTADO = { 'Trabajando': 0x7ee08a, 'Listo': 0x89c9c9, 'Listo con avisos': 0xf5b84a, 'Error': 0xff5a52, 'En cola': 0xf5b84a, 'Inactivo': 0x7d8a87 };
+const CSS_ESTADO = { 'Trabajando': '#7ee08a', 'Listo': '#89c9c9', 'Listo con avisos': '#f5b84a', 'Error': '#ff5a52', 'En cola': '#f5b84a', 'Inactivo': '#7d8a87' };
+const TEX_ANILLO = (() => {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 256;
+  const x = cv.getContext('2d'), g = x.createRadialGradient(128, 128, 40, 128, 128, 128);
+  g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.55, 'rgba(255,255,255,0.55)'); g.addColorStop(0.72, 'rgba(255,255,255,0.9)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+  return new THREE.CanvasTexture(cv);
+})();
+
+function construirEstacion(e) {
+  const g = new THREE.Group(); g.position.set(e.x, 0, e.z); escena.add(g);
+  // Escritorio: tablero blanco, patas finas
+  caja(4.6, 0.16, 2.3, C.mesa, 0, 1.92, 0, { r: 0.06, padre: g });
+  [[-2.05, -0.95], [2.05, -0.95], [-2.05, 0.95], [2.05, 0.95]].forEach(([dx, dz]) => caja(0.12, 1.92, 0.12, C.pata, dx, 0, dz, { r: 0.04, padre: g }));
+  sombraSuave(e.x, e.z, 6.4, 4.2);
+  // Monitor de cara al agente (el agente da la espalda a la cámara, como en una oficina real)
+  caja(0.5, 0.06, 0.4, C.pantallaMarco, 0, 2.08, -0.55, { r: 0.03, padre: g });
+  caja(0.1, 0.6, 0.1, C.pantallaMarco, 0, 2.1, -0.6, { r: 0.03, padre: g });
+  caja(2.6, 1.55, 0.1, C.pantallaMarco, 0, 2.55, -0.62, { r: 0.05, padre: g });
+  const pantalla = new THREE.Mesh(new THREE.PlaneGeometry(2.42, 1.38), new THREE.MeshBasicMaterial({ color: lin(0x7d8a87), toneMapped: false }));
+  pantalla.position.set(0, 3.325, -0.56); g.add(pantalla);
+  // Teclado, taza y objeto propio de cada agente
+  caja(1.3, 0.05, 0.42, 0xe4e8e8, 0, 2.08, 0.35, { r: 0.03, padre: g });
+  cilindro(0.16, 0.14, 0.32, MARCA.lima, 1.6, 2.08, 0.4, { padre: g });
+  if (e.id === 'Radar') { const p = new THREE.Mesh(new THREE.SphereGeometry(0.38, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2.6), mate(0xf2f7f9, { side: THREE.DoubleSide })); p.rotation.x = Math.PI * 0.7; p.position.set(-1.7, 2.55, -0.3); p.castShadow = true; g.add(p); cilindro(0.04, 0.06, 0.45, C.pata, -1.7, 2.08, -0.3, { padre: g }); }
+  if (e.id === 'Filtro') { const c = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.5, 18, 1, true), mate(0x3c4a8c, { side: THREE.DoubleSide })); c.rotation.x = Math.PI; c.position.set(-1.7, 2.4, -0.2); g.add(c); }
+  if (e.id === 'Cazatendencias') { caja(0.36, 0.62, 0.05, 0x111111, -1.7, 2.1, -0.2, { r: 0.04, padre: g }).rotation.x = -0.35; }
+  if (e.id === 'Analista') { [0.35, 0.6, 0.85].forEach((h, i) => caja(0.18, h, 0.18, [MARCA.turquesa, MARCA.lima, MARCA.verde][i], -1.95 + i * 0.26, 2.08, -0.3, { r: 0.03, padre: g })); }
+  // Estudio del Creativo: fondo lima, aro de luz y cámara en trípode
+  if (e.estudio) {
+    caja(4.4, 3.4, 0.12, MARCA.lima, 5.6, 0, -1.6, { r: 0.04, padre: g });
+    caja(4.4, 0.04, 2.6, MARCA.lima, 5.6, 0, -0.3, { r: 0.02, padre: g, sombra: false });
+    const aro = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.07, 10, 32), new THREE.MeshBasicMaterial({ color: lin(0xfffbea), toneMapped: false }));
+    aro.position.set(3.6, 3.0, 0.9); aro.rotation.y = -0.5; g.add(aro);
+    cilindro(0.04, 0.04, 2.4, C.pata, 3.6, 0, 0.9, { padre: g });
+    caja(0.7, 0.45, 0.42, 0x1b1f1e, 7.2, 2.4, 1.6, { r: 0.08, padre: g }).rotation.y = 0.6;
+    [-0.3, 0.3].forEach(dx => { const pata = cilindro(0.03, 0.03, 2.5, C.pata, 7.2 + dx, 0, 1.6, { padre: g }); pata.rotation.z = dx * 0.4; });
+  }
+  // Silla (delante del escritorio) y agente sentado de espaldas a la cámara
+  const zs = 1.95;
+  cilindro(0.75, 0.75, 0.22, C.sillaAsiento, 0, 1.0, zs, { padre: g });
+  cilindro(0.08, 0.08, 1.0, C.pata, 0, 0, zs, { padre: g });
+  cilindro(0.6, 0.6, 0.06, C.pata, 0, 0, zs, { padre: g });
+  caja(1.4, 1.3, 0.2, C.silla, 0, 1.25, zs + 0.72, { r: 0.12, padre: g });
+  sombraSuave(e.x, e.z + zs, 2.4, 2.4);
+  const fig = personaje(e.ropa, e.piel, e.pelo, e.estilo, e.acento);
+  fig.position.set(0, 0.68, zs - 0.05);
+  fig.rotation.y = Math.PI; // mira hacia su monitor
+  fig.userData.pies.forEach(p => { p.position.z = 0.75; p.position.y = 0.45; });
+  g.add(fig);
+  // Anillo de estado en el piso + insignia flotante
+  const anillo = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 3.0), new THREE.MeshBasicMaterial({ map: TEX_ANILLO, color: lin(0x7d8a87), transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+  anillo.rotation.x = -Math.PI / 2; anillo.position.set(0, 0.04, zs); g.add(anillo);
+  const nombre = etiqueta(e.icono + ' ' + e.nombre, 0.62, { ancho: 560, alto: 120 });
+  nombre.position.set(0, 4.75, zs - 0.2); g.add(nombre);
+  const alerta = etiqueta('!', 0.75, { ancho: 120, alto: 120, fondo: '#ff5a52', color: '#ffffff', fuente: '700 84px Poppins, sans-serif' });
+  alerta.position.set(1.65, 4.75, zs - 0.2); alerta.visible = false; g.add(alerta);
+  e.obj = { grupo: g, pantalla, fig, anillo, alerta };
+  e.estado = { estado: 'Inactivo', detalle: 'Sin datos todavía.' };
+  e.cajas = [
+    { x0: e.x - 2.6, x1: e.x + 2.6, z0: e.z - 1.4, z1: e.z + 1.4 },                     // escritorio
+    e.estudio ? { x0: e.x + 3.2, x1: e.x + 8.0, z0: e.z - 1.9, z1: e.z + 2.0 } : { x0: 0, x1: 0, z0: 0, z1: 0 }, // estudio
+    { x0: e.x - 1.0, x1: e.x + 1.0, z0: e.z + zs - 1.0, z1: e.z + zs + 1.1 }            // silla y agente
+  ];
+  e.zona = { x: e.x + 0.2, z: e.z + zs + 2.1 };
+}
+
+// ---------- Tú (Freddy) ----------
+let jugadorFig, sombraJugador;
+const yo = { x: -1.5, z: 2.2, rot: Math.PI * 0.85, vel: 0 };
+function construirJugador() {
+  jugadorFig = personaje(MARCA.lima, C.piel4, C.pelo1, 'gorra', MARCA.verde);
+  escena.add(jugadorFig);
+  const nombre = etiqueta('Freddy', 0.55, { ancho: 400, alto: 110, fondo: '#dafc92', color: '#02261e', fuente: '700 52px Poppins, sans-serif' });
+  nombre.position.y = 3.6; jugadorFig.add(nombre);
+  sombraJugador = sombraSuave(0, 0, 2.2, 2.2);
+}
+
+function colisiona(x, z) {
+  if (x < X0 + 1.2 || x > X1 - 0.8 || z < Z0 + 1.4 || z > Z1 - 0.7) return true;
+  if (x > 13.0 && z > -1.0 && z < 6.0) return true;                    // barra de café
+  if (x < -5.6 && z > 7.9) return true;                                 // sofá
+  if (Math.hypot(x + 10, z - 5.6) < 2.0) return true;                   // mesa de centro
+  return ESTACIONES.some(e => e.cajas.some(c => x > c.x0 - 0.45 && x < c.x1 + 0.45 && z > c.z0 - 0.45 && z < c.z1 + 0.45));
+}
+
+// ============================================================
+//  BUCLE DEL JUEGO
+// ============================================================
+let estacionCerca = null;
+const reloj = new THREE.Clock();
+const objetivoCam = new THREE.Vector3(0, 0, 4);
+const tmpCol = new THREE.Color();
+function bucle() {
+  requestAnimationFrame(bucle);
+  const dt = Math.min(reloj.getDelta(), 0.05), t = reloj.elapsedTime, ahora = performance.now();
+  const entrada = leerEntradas();
+
+  if (pantalla === 'calibrar' && calib) pasoCalibracion(ahora);
+  else pulsaciones(entrada, ahora).forEach(manejar);
+
+  // Movimiento (la vista es isométrica: "arriba" en la palanca va hacia el fondo de la oficina)
+  let mx = 0, mz = 0;
+  if (pantalla === 'oficina' && Math.hypot(entrada.x, entrada.y) > 0.2) {
+    mx = (entrada.x + entrada.y) * 0.7071; mz = (entrada.y - entrada.x) * 0.7071;
+  }
+  const mag = Math.min(1, Math.hypot(mx, mz));
+  if (mag > 0.05) {
+    const vel = 7.2 * mag * dt, nx = yo.x + mx / mag * vel, nz = yo.z + mz / mag * vel;
+    if (!colisiona(nx, yo.z)) yo.x = nx;
+    if (!colisiona(yo.x, nz)) yo.z = nz;
+    let dif = Math.atan2(mx, mz) - yo.rot; while (dif > Math.PI) dif -= Math.PI * 2; while (dif < -Math.PI) dif += Math.PI * 2;
+    yo.rot += dif * Math.min(1, dt * 12);
+  }
+  yo.vel += ((mag > 0.05 ? 1 : 0) - yo.vel) * Math.min(1, dt * 10);
+  const ud = jugadorFig.userData, fase = t * 10;
+  jugadorFig.position.set(yo.x, 0, yo.z);
+  jugadorFig.rotation.y = yo.rot;
+  ud.cuerpo.position.y = Math.abs(Math.sin(fase)) * 0.12 * yo.vel + Math.sin(t * 2) * 0.02 * (1 - yo.vel);
+  ud.tor.scale.set(1 + Math.sin(t * 2) * 0.01, 1 - Math.sin(t * 2) * 0.01, 1);
+  ud.pies[0].position.z = 0.05 + Math.sin(fase) * 0.3 * yo.vel; ud.pies[1].position.z = 0.05 - Math.sin(fase) * 0.3 * yo.vel;
+  ud.pies[0].position.y = 0.15 + Math.max(0, Math.sin(fase)) * 0.12 * yo.vel; ud.pies[1].position.y = 0.15 + Math.max(0, -Math.sin(fase)) * 0.12 * yo.vel;
+  ud.brazos[0].rotation.x = -Math.sin(fase) * 0.7 * yo.vel; ud.brazos[1].rotation.x = Math.sin(fase) * 0.7 * yo.vel;
+  sombraJugador.position.set(yo.x, 0.03, yo.z);
+
+  // Agentes: animación según su estado
+  ESTACIONES.forEach((e, i) => {
+    const est = e.estado.estado, o = e.obj, f = o.fig.userData;
+    const trabajando = est === 'Trabajando';
+    f.brazos[0].rotation.x = trabajando ? -1.25 + Math.sin(t * 16 + i) * 0.18 : -1.05;
+    f.brazos[1].rotation.x = trabajando ? -1.25 + Math.cos(t * 16 + i) * 0.18 : -1.05;
+    f.cabeza.rotation.y = trabajando ? Math.sin(t * 1.6 + i) * 0.18 : Math.sin(t * 0.5 + i) * 0.1;
+    f.cabeza.rotation.x = est === 'Error' ? 0.35 : (trabajando ? -0.05 : 0.05);
+    f.cuerpo.position.y = Math.sin(t * 2 + i) * 0.015;
+    const col = COLOR_ESTADO[est] || 0x7d8a87;
+    const pulso = (trabajando || est === 'Error' || est === 'En cola') ? 0.6 + 0.4 * Math.abs(Math.sin(t * 3)) : 0.85;
+    o.anillo.material.color.copy(setLin(tmpCol, col).multiplyScalar(pulso));
+    if (trabajando) setLin(o.pantalla.material.color, Math.sin(t * 6 + i) > 0 ? 0xd9fbb0 : 0xb8f0cf);
+    else setLin(o.pantalla.material.color, est === 'Error' ? 0xff8f88 : est === 'Inactivo' ? 0x3b4a47 : 0xcfeeee);
+    o.alerta.visible = est === 'Error' && Math.sin(t * 5) > -0.3;
+  });
+
+  // Estación más cercana
+  let cerca = null, dmin = 2.8;
+  if (pantalla === 'oficina') ESTACIONES.forEach(e => { const d = Math.hypot(yo.x - e.zona.x, yo.z - e.zona.z); if (d < dmin) { dmin = d; cerca = e; } });
+  if (cerca !== estacionCerca) { estacionCerca = cerca; pintarPrompt(); if (cerca) sonar('paso'); }
+
+  // Cámara que sigue al jugador con suavidad
+  objetivoCam.lerp(new THREE.Vector3(yo.x * 0.75, 0, yo.z * 0.75 - 1.5), Math.min(1, dt * 3.5));
+  camara.position.copy(objetivoCam).add(DESPLAZ_CAMARA);
+  camara.lookAt(objetivoCam);
+  sol.position.set(objetivoCam.x + 16, 30, objetivoCam.z + 10);
+  sol.target.position.copy(objetivoCam);
+
+  renderer.render(escena, camara);
+}
+
+// ============================================================
+//  ACCIONES
+// ============================================================
+function manejar(a) {
+  if (pantalla === 'pin') return manejarPin(a);
+  if (pantalla === 'menu') return manejarMenu(a);
+  if (pantalla === 'panel') return manejarPanel(a);
+  if (pantalla !== 'oficina') return;
+  if (confirmacion) {
+    if (a === 'A') { const f = confirmacion; confirmacion = null; pintarPrompt(); f(); }
+    else if (a === 'B' || a === 'MENOS') { confirmacion = null; pintarPrompt(); avisar('Cancelado.'); }
+    return;
+  }
+  if (a === 'MAS') return abrirMenu();
+  if (a === 'L') { zoom = Math.min(24, zoom + 2); ajustarTamano(); return; }
+  if (a === 'R') { zoom = Math.max(9, zoom - 2); ajustarTamano(); return; }
+  if (estacionCerca) {
+    const acc = estacionCerca.acciones.find(x => x.b === a);
+    if (acc) acc.f();
+  }
+}
+
+let confirmacion = null;
+function confirmarCaza() {
+  confirmacion = () => correr('Cazatendencias');
+  $('#prompt-acciones').innerHTML = boton('A', 'Sí, cazar (usa saldo de Apify)') + boton('B', 'Cancelar');
+  avisar('🔥 Cazar tendencias usa tu saldo de Apify (unos US$0.75). Presiona A para confirmar.');
+}
+
+function boton(b, texto) {
+  const n = { MENOS: '−', MAS: '+', FLECHAS: '◀ ▶', L: 'L', R: 'R' }[b] || b;
+  return '<span class="accion" data-accion="' + b + '"><span class="btn ' + b + '">' + n + '</span>' + esc(texto) + '</span>';
+}
+
+function pintarPrompt() {
+  const p = $('#prompt');
+  if (!estacionCerca || pantalla !== 'oficina') { p.classList.add('oculto'); return; }
+  const e = estacionCerca;
+  p.classList.remove('oculto');
+  $('#prompt-icono').textContent = e.icono;
+  $('#prompt-nombre').textContent = e.nombre;
+  $('#prompt-estado').innerHTML = '<span class="punto-estado" style="background:' + (CSS_ESTADO[e.estado.estado] || '#9aa1ad') + '"></span>' +
+    esc(e.estado.estado) + ' · ' + esc(e.estado.detalle || '');
+  $('#prompt-acciones').innerHTML = e.acciones.map(x => boton(x.b, x.t)).join('');
+}
+
+function verEstado(id) {
+  const e = ESTACIONES.find(x => x.id === id);
+  avisar(e.icono + ' ' + e.nombre + ' — ' + e.estado.estado + ': ' + (e.estado.detalle || 'Sin detalle.'), e.estado.estado === 'Error');
+}
+
+async function correr(agente) {
+  try {
+    const r = await api({ accion: 'correr', agente: agente });
+    sonar('abrir');
+    const nombre = agente === 'Recoger' ? 'Cazatendencias (recoger)' : agente;
+    avisar('📨 ' + nombre + ' recibió tu orden. Empieza en unos segundos.');
+    const e = ESTACIONES.find(x => x.id === (agente === 'Recoger' ? 'Cazatendencias' : agente));
+    if (e) { e.estado = { estado: 'En cola', detalle: 'Orden recibida.' }; pintarPrompt(); }
+    if (r.jugador) pintarJugador(r.jugador);
+    xpFlotante(5);
+    setTimeout(refrescarEstado, 8000);
+  } catch (err) { sonar('error'); avisar(err.message, true); manejarPinMalo(err); }
+}
+
+// ============================================================
+//  PANEL DE CARTAS
+// ============================================================
+const PANEL = { tipo: null, cartas: [], i: 0, ocupado: false };
+const TITULOS_PANEL = { noticias: ['📰', 'Mesa de noticias'], tendencias: ['🔥', 'Pizarra de tendencias'], piezas: ['✍️', 'Piezas del Creativo'] };
+
+async function abrirPanel(tipo) {
+  PANEL.tipo = tipo; PANEL.cartas = []; PANEL.i = 0;
+  $('#panel-icono').textContent = TITULOS_PANEL[tipo][0];
+  $('#panel-titulo').textContent = TITULOS_PANEL[tipo][1];
+  $('#carta').innerHTML = '<div class="vacio"><div>⏳</div></div>';
+  pintarPie();
+  mostrarPantalla('panel');
+  sonar('abrir');
+  try {
+    const r = await api({ accion: 'cartas', tipo: tipo });
+    PANEL.cartas = r.cartas || [];
+    pintarCarta();
+  } catch (err) { avisar(err.message, true); manejarPinMalo(err); cerrarPanel(); }
+}
+function cerrarPanel() { mostrarPantalla('oficina'); pintarPrompt(); refrescarEstado(); }
+
+function pintarPie() {
+  const t = PANEL.tipo;
+  const b = t === 'piezas'
+    ? [['A', 'Aprobar'], ['B', 'Descartar'], ['Y', 'Ya producida'], ['X', 'Ver fuente'], ['FLECHAS', 'Otra'], ['MENOS', 'Cerrar']]
+    : [['A', 'Me gusta'], ['B', 'Descartar'], ['Y', 'Al Creativo'], ['X', 'Ver fuente'], ['FLECHAS', 'Otra'], ['MENOS', 'Cerrar']];
+  $('#panel-pie').innerHTML = b.map(x => boton(x[0], x[1])).join('');
+}
+
+function pintarCarta(animar) {
+  const c = PANEL.cartas[PANEL.i];
+  $('#panel-contador').textContent = PANEL.cartas.length ? (PANEL.i + 1) + ' de ' + PANEL.cartas.length : '0 de 0';
+  const el = $('#carta');
+  el.className = '';
+  if (!c) {
+    el.innerHTML = '<div class="vacio"><div><div>🎉</div><p>¡Mesa limpia! No hay nada pendiente aquí.</p><p style="font-size:16px">Presiona − para volver a la oficina.</p></div></div>';
+    return;
+  }
+  const bl = (titulo, texto, clase) => texto ? '<div class="bloque ' + (clase || '') + '"><h4>' + titulo + '</h4><p>' + esc(texto) + '</p></div>' : '';
+  let h = '';
+  if (PANEL.tipo === 'noticias') {
+    h = '<div class="etiquetas"><span class="etiqueta puntaje">' + esc(c.puntaje) + ' pts</span>' +
+      (c.area ? '<span class="etiqueta">' + esc(c.area) + '</span>' : '') + (c.tipo ? '<span class="etiqueta">' + esc(c.tipo) + '</span>' : '') +
+      '<span class="etiqueta">' + esc(c.fuente) + '</span></div>' +
+      '<div class="carta-titulo">' + esc(c.titulo) + '</div>' +
+      bl('Ángulo para Editable', c.angulo) + bl('Por qué', c.porque) +
+      (c.riesgo && !/^ninguno/i.test(c.riesgo) ? bl('Riesgo', c.riesgo, 'aviso') : '') + bl('Resumen', c.resumen);
+  } else if (PANEL.tipo === 'tendencias') {
+    h = '<div class="etiquetas"><span class="etiqueta puntaje">' + esc(c.puntaje) + ' pts</span><span class="etiqueta formato">' + esc(c.formato) + '</span>' +
+      '<span class="etiqueta">' + esc(c.red) + '</span><span class="etiqueta">' + (c.evidencia || []).length + ' ejemplos</span></div>' +
+      '<div class="carta-titulo">' + esc(c.titulo) + '</div>' +
+      bl('Qué es', c.queEs) + bl('Por qué funciona', c.porQue) + bl('Cómo usarla en Editable', c.comoUsarla);
+  } else {
+    h = '<div class="etiquetas"><span class="etiqueta formato">' + esc(c.formato) + '</span><span class="etiqueta">Desde: ' + esc(c.origen) + '</span></div>' +
+      '<div class="carta-titulo">' + esc(c.titulo) + '</div>' +
+      bl('Gancho', c.gancho, 'gancho') + bl('Contenido', c.contenido) + bl('Copy', c.copy) + bl('Hashtags', c.hashtags) +
+      bl('Llamado a la acción', c.cta) + bl('Brief visual', c.brief) + bl('Audio sugerido', c.audio) +
+      (c.verificar && !/^nada pendiente/i.test(c.verificar) ? bl('Datos a verificar antes de publicar', c.verificar, 'aviso') : '');
+  }
+  el.innerHTML = h;
+  el.scrollTop = 0;
+  if (animar) { void el.offsetWidth; el.className = 'entra'; }
+}
+
+function manejarPanel(a) {
+  if (PANEL.ocupado) return;
+  if (a === 'MENOS' || a === 'MAS') return cerrarPanel();
+  const c = PANEL.cartas[PANEL.i];
+  if (a === 'DER' && PANEL.cartas.length) { PANEL.i = (PANEL.i + 1) % PANEL.cartas.length; sonar('click'); return pintarCarta(true); }
+  if (a === 'IZQ' && PANEL.cartas.length) { PANEL.i = (PANEL.i - 1 + PANEL.cartas.length) % PANEL.cartas.length; sonar('click'); return pintarCarta(true); }
+  if (a === 'ARRIBA') { $('#carta').scrollTop -= 120; return; }
+  if (a === 'ABAJO') { $('#carta').scrollTop += 120; return; }
+  if (a === 'L') { $('#carta').scrollTop -= 400; return; }
+  if (a === 'R') { $('#carta').scrollTop += 400; return; }
+  if (!c) { if (a === 'B' || a === 'A') cerrarPanel(); return; }
+  if (a === 'X') {
+    const enlace = c.enlace || (c.evidencia && c.evidencia[0]);
+    if (enlace) window.open(enlace, '_blank', 'noopener'); else avisar('Esta carta no tiene enlace.');
+    return;
+  }
+  const decisiones = PANEL.tipo === 'piezas'
+    ? { A: ['aprobar', 'sale-si', 'si', '✅ Pieza aprobada.'], B: ['descartar', 'sale-no', 'no', '🗑 Pieza descartada.'], Y: ['producida', 'sale-arriba', 'creativo', '🎬 Marcada como producida.'] }
+    : { A: ['si', 'sale-si', 'si', '👍 Anotado: te gusta.'], B: ['no', 'sale-no', 'no', '🗑 Descartada.'], Y: ['creativo', 'sale-arriba', 'creativo', '✍️ Enviada al Creativo.'] };
+  const d = decisiones[a];
+  if (d) decidir(c, d[0], d[1], d[2], d[3]);
+}
+
+async function decidir(carta, decision, animacion, sonido, mensaje) {
+  PANEL.ocupado = true;
+  const el = $('#carta');
+  el.className = animacion;
+  sonar(sonido);
+  try {
+    const r = await api({ accion: 'decidir', tipo: PANEL.tipo, id: carta.id, decision: decision });
+    PANEL.cartas.splice(PANEL.i, 1);
+    if (PANEL.i >= PANEL.cartas.length) PANEL.i = 0;
+    avisar(mensaje);
+    xpFlotante(r.xpGanada);
+    if (r.jugador) pintarJugador(r.jugador);
+    if (r.subioNivel) subioNivel(r.jugador);
+    const k = { noticias: '#c-noticias', tendencias: '#c-tendencias', piezas: '#c-piezas' }[PANEL.tipo];
+    $(k).textContent = PANEL.cartas.length;
+  } catch (err) {
+    sonar('error'); avisar(err.message, true); manejarPinMalo(err);
+  }
+  setTimeout(() => { PANEL.ocupado = false; pintarCarta(true); }, 260);
+}
+
+// ============================================================
+//  JUGADOR Y ESTADO DE LA OFICINA
+// ============================================================
+function pintarJugador(j) {
+  $('#nivel-titulo').textContent = 'Nivel ' + j.nivel + ' · ' + j.titulo;
+  $('#nivel-sub').textContent = j.xp + ' XP · Racha ' + j.racha + (j.racha === 1 ? ' día' : ' días') + (j.racha >= 3 ? ' 🔥' : '');
+  $('#xp-relleno').style.width = Math.max(0, Math.min(100, j.progreso)) + '%';
+}
+function subioNivel(j) {
+  sonar('nivel');
+  $('#subio-texto').textContent = 'Nivel ' + j.nivel + ' · ' + j.titulo;
+  $('#subio').classList.remove('oculto');
+  setTimeout(() => $('#subio').classList.add('oculto'), 2600);
+}
+let refrescando = false;
+async function refrescarEstado() {
+  if (refrescando || (!DEMO && !pin)) return;
+  refrescando = true;
+  try {
+    const r = await api({ accion: 'estado' });
+    ESTACIONES.forEach(e => { if (r.agentes && r.agentes[e.id]) e.estado = r.agentes[e.id]; });
+    if (r.jugador) pintarJugador(r.jugador);
+    if (r.contadores) {
+      $('#c-noticias').textContent = r.contadores.noticias;
+      $('#c-tendencias').textContent = r.contadores.tendencias;
+      $('#c-piezas').textContent = r.contadores.piezas;
+    }
+    if (!confirmacion) pintarPrompt();
+  } catch (err) { manejarPinMalo(err); }
+  refrescando = false;
+}
+function manejarPinMalo(err) {
+  if (err && err.pinMalo) { pin = ''; guardar('pin', ''); pinTemp = ''; mostrarPantalla('pin'); pintarPin(); $('#pin-error').textContent = 'Tu PIN cambió o no es válido. Escríbelo de nuevo.'; }
+}
+
+function entrarOficina() {
+  mostrarPantalla('oficina');
+  refrescarEstado();
+  pintarPrompt();
+}
+
+// ============================================================
+//  ARRANQUE
+// ============================================================
+document.querySelectorAll('.logo-iso').forEach(el => el.innerHTML = svgColor(SVG_ISOTIPO, el.id === 'avatar' ? '#dafc92' : '#02261e'));
+document.querySelectorAll('.logo-iso-lima').forEach(el => el.innerHTML = svgColor(SVG_ISOTIPO, '#dafc92'));
+document.querySelectorAll('.logo-texto').forEach(el => el.innerHTML = svgColor(SVG_LOGOTIPO, '#02261e'));
+construirOficina();
+ESTACIONES.forEach(construirEstacion);
+construirJugador();
+aplicarCalidad();
+bucle();
+if (DEMO) $('#demo').classList.remove('oculto');
+pintarPin();
+setInterval(() => { if (pantalla === 'oficina' || pantalla === 'panel') refrescarEstado(); }, 15000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refrescarEstado(); });
+
+if (!leer('controles', null) && mandos().length) iniciarCalibracion();
+else if (!DEMO && !pin) mostrarPantalla('pin');
+else entrarOficina();
+</script>
+</body>
+</html>
