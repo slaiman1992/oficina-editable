@@ -132,8 +132,51 @@ body::before { content: ''; position: fixed; inset: 0; pointer-events: none;
 #subio h1 { margin: 0; font: 700 36px 'Poppins'; }
 #subio p { margin: 6px 0 0; font: 600 18px 'Roboto Mono'; color: var(--turquesa); }
 #ayuda-teclado { position: fixed; right: 18px; bottom: 14px; z-index: 4; font: 500 11px 'Roboto Mono'; color: rgba(242,247,249,.45); }
+/* ---------- Modo liviano (Switch): sin desenfoques ni sombras pesadas ---------- */
+body.liviano .ficha { backdrop-filter: none; box-shadow: 0 6px 14px rgba(0,0,0,.25); }
+body.liviano #panel, body.liviano #pizarra { backdrop-filter: none; background: rgba(1,20,15,.82); }
+body.liviano #panel-caja, body.liviano #pizarra-caja { box-shadow: none; }
+body.liviano .aviso-toast { box-shadow: none; }
+
+/* ---------- Pizarra: Favoritas + Calendario ---------- */
+#pizarra { position: fixed; inset: 0; z-index: 10; background: rgba(1,20,15,.55); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 18px; }
+#pizarra-caja { width: min(1080px, 100%); height: min(660px, calc(100vh - 36px)); background: var(--hueso); border-radius: 26px; box-shadow: 0 30px 70px rgba(0,0,0,.45); display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+#pizarra-cabeza { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--verde); color: var(--hueso); }
+#pizarra-cabeza .iso { width: 50px; margin-right: 6px; }
+.pestana { font: 600 16px 'Poppins'; padding: 8px 16px; border-radius: 12px; color: var(--turquesa); background: transparent; border: 0; cursor: pointer; pointer-events: auto; }
+.pestana.activa { background: var(--lima); color: var(--verde); }
+#pizarra-contador { margin-left: auto; font: 600 15px 'Roboto Mono'; background: rgba(218,252,146,.14); color: var(--lima); border-radius: 10px; padding: 5px 11px; }
+#pizarra-cuerpo { position: relative; overflow: hidden; padding: 18px 22px; }
+#pizarra-contenido { height: 100%; overflow-y: auto; scroll-behavior: smooth; padding-right: 6px; }
+#pizarra-pie { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 14px 16px; background: #e7eeee; }
+.cal-mes { display: flex; align-items: baseline; gap: 12px; margin: 0 0 12px; }
+.cal-mes h3 { margin: 0; font: 700 26px 'Poppins'; text-transform: capitalize; }
+.cal-mes span { font: 600 13px 'Roboto Mono'; color: var(--tinta-suave); }
+.cal-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.cal-col h4 { margin: 0 0 8px; font: 600 12px 'Roboto Mono'; letter-spacing: 1.2px; text-transform: uppercase; color: #6f8a84; }
+.efe { display: grid; grid-template-columns: 58px 1fr; gap: 12px; align-items: start; background: #fff; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; box-shadow: inset 0 0 0 1px var(--linea); }
+.efe.pasada { opacity: .5; }
+.efe.pronto { box-shadow: inset 0 0 0 2px var(--turquesa); }
+.efe.hoy { background: var(--verde); color: var(--hueso); box-shadow: none; }
+.efe.hoy .efe-idea { color: var(--lima); }
+.efe-dia { background: var(--verde); color: var(--lima); border-radius: 10px; text-align: center; padding: 6px 0; font: 700 22px/1 'Roboto Mono'; }
+.efe-dia small { display: block; font: 600 10px 'Roboto Mono'; margin-top: 3px; color: var(--turquesa); text-transform: uppercase; }
+.efe.hoy .efe-dia { background: var(--lima); color: var(--verde); }
+.efe.hoy .efe-dia small { color: var(--verde); }
+.efe-nombre { font: 600 16px/1.3 'Poppins'; }
+.efe-idea { font: 500 13.5px/1.4 'Poppins'; color: var(--tinta-suave); margin-top: 3px; }
+.efe-vacio { font: 500 14px 'Poppins'; color: var(--tinta-suave); padding: 10px 2px; }
+
+/* ---------- Máquinas arcade (pantalla completa) ---------- */
+#arcade { position: fixed; inset: 0; z-index: 25; background: #010d0a; display: grid; place-items: center; }
+#arcade canvas { width: 100vw; height: 100vh; object-fit: contain; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+#arcade-ayuda { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); font: 600 12px 'Roboto Mono'; color: rgba(218,252,146,.55); white-space: nowrap; }
+#fundido { position: fixed; inset: 0; z-index: 50; background: #010d0a; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+#fundido.on { opacity: 1; }
+
 @media (max-width: 760px) {
   #prompt-estado { display: none; } #jugador { min-width: 0; } #xp-barra { width: 130px; } .carta-titulo { font-size: 21px; }
+  .cal-columnas { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -215,6 +258,22 @@ body::before { content: ''; position: fixed; inset: 0; pointer-events: none;
   </div>
 </div>
 
+<!-- Pizarra del equipo: Favoritas + Calendario -->
+<div id="pizarra" class="oculto">
+  <div id="pizarra-caja">
+    <div id="pizarra-cabeza"><span class="iso logo-iso-lima"></span>
+      <button class="pestana activa" data-accion="L" id="tab-favoritas">⭐ Favoritas</button>
+      <button class="pestana" data-accion="R" id="tab-calendario">📅 Calendario</button>
+      <span id="pizarra-contador">0 de 0</span></div>
+    <div id="pizarra-cuerpo"><div id="pizarra-contenido"></div></div>
+    <div id="pizarra-pie"></div>
+  </div>
+</div>
+
+<!-- Máquina arcade en pantalla completa -->
+<div id="arcade" class="oculto"><canvas id="arcade-lienzo" width="480" height="270"></canvas><div id="arcade-ayuda">− Salir · + Pausa</div></div>
+<div id="fundido"></div>
+
 <div id="avisos"></div>
 <div id="subio" class="oculto"><div class="caja"><h1>¡Subiste de nivel!</h1><p id="subio-texto">Nivel 2 · Junior</p></div></div>
 <div id="ayuda-teclado">Teclado: flechas · Enter = A · Retroceso = B · X · Y · Q/E = L/R · Esc = − · P = +</div>
@@ -222,6 +281,8 @@ body::before { content: ''; position: fixed; inset: 0; pointer-events: none;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <!-- La dirección de tu oficina vive en config.js (así puedes actualizar este archivo sin volver a pegarla) -->
 <script src="config.js"></script>
+<script src="efemerides.js"></script>
+<script src="arcade.js"></script>
 <script>
 'use strict';
 // Si config.js no existe o no tiene la dirección, el juego abre en MODO DEMO con datos de ejemplo.
@@ -289,7 +350,7 @@ function xpFlotante(n) {
 let pin = leer('pin', '');
 
 async function api(params) {
-  if (DEMO) return demoApi(params);
+  if (DEMO) { const j = await demoApi(params); if (!j.ok) throw new Error(j.error || 'Error (demo).'); return j; }
   const url = API_URL + '?' + new URLSearchParams(Object.assign({}, params, { pin: pin, t: Date.now() })).toString();
   let r;
   try {
@@ -420,6 +481,13 @@ function leerEntradas() {
   if (TECLAS.IZQ.some(k => teclas.has(k))) x = -1;
   if (TECLAS.DER.some(k => teclas.has(k))) x = 1;
   estado.x = x; estado.y = y;
+  // Cada mando por separado (para jugar de a dos en las máquinas arcade)
+  estado.pads = pads.map(p => {
+    let px = p.axes[0] || 0, py = p.axes[1] || 0;
+    const b = i => p.buttons[i] && p.buttons[i].pressed;
+    if (b(12)) py = -1; if (b(13)) py = 1; if (b(14)) px = -1; if (b(15)) px = 1;
+    return { x: Math.abs(px) > 0.25 ? px : 0, y: Math.abs(py) > 0.25 ? py : 0, A: valorEntrada(m.A, [p]), B: valorEntrada(m.B, [p]) };
+  });
   return estado;
 }
 let previo = {};
@@ -513,8 +581,11 @@ function mostrarPantalla(p) {
   $('#pantalla-calibrar').classList.toggle('oculto', p !== 'calibrar');
   $('#pantalla-menu').classList.toggle('oculto', p !== 'menu');
   $('#panel').classList.toggle('oculto', p !== 'panel');
-  $('#hud').classList.toggle('oculto', !(p === 'oficina' || p === 'panel'));
+  $('#pizarra').classList.toggle('oculto', p !== 'pizarra');
+  $('#arcade').classList.toggle('oculto', p !== 'juego');
+  $('#hud').classList.toggle('oculto', !(p === 'oficina' || p === 'panel' || p === 'pizarra'));
   if (p !== 'oficina') $('#prompt').classList.add('oculto');
+  pedirCuadro(); // al cambiar de pantalla se dibuja un cuadro nuevo aunque el 3D esté en pausa
 }
 
 // ---- PIN ----
@@ -570,7 +641,7 @@ const OPCIONES_MENU = () => [
   { t: '▶ Continuar', f: () => mostrarPantalla('oficina') },
   { t: '🎮 Configurar controles', f: iniciarCalibracion },
   { t: '🖥 Pantalla completa', f: pantallaCompleta },
-  { t: '✨ Calidad gráfica: ' + (calidadAlta ? 'Alta' : 'Ahorro'), f: () => { calidadAlta = !calidadAlta; guardar('calidad', calidadAlta); aplicarCalidad(); pintarMenu(); } },
+  { t: '✨ Calidad gráfica: ' + NOMBRE_CALIDAD[calidad], f: cambiarCalidad },
   { t: '🔄 Actualizar la oficina', f: () => { refrescarEstado(); mostrarPantalla('oficina'); avisar('Actualizando…'); } },
   { t: '🔑 Cerrar sesión (olvidar PIN)', f: () => { pin = ''; guardar('pin', ''); if (DEMO) { avisar('En modo demo no hay PIN.'); return; } mostrarPantalla('pin'); pintarPin(); } }
 ];
@@ -587,6 +658,13 @@ function manejarMenu(a) {
   else if (a === 'B' || a === 'MENOS' || a === 'MAS') { mostrarPantalla('oficina'); return; }
   pintarMenu();
 }
+function cambiarCalidad() {
+  // Alta → Switch → Ahorro → Alta. Algunas opciones solo se aplican al arrancar, por eso se recarga.
+  const sig = { alta: 'media', media: 'ahorro', ahorro: 'alta' }[calidad];
+  guardar('calidad2', sig);
+  avisar('✨ Calidad: ' + NOMBRE_CALIDAD[sig] + '. Aplicando…');
+  setTimeout(() => location.reload(), 500);
+}
 function pantallaCompleta() {
   const d = document.documentElement;
   const f = d.requestFullscreen || d.webkitRequestFullscreen;
@@ -598,37 +676,52 @@ function pantallaCompleta() {
 //  ESCENA 3D — DIORAMA DE LA OFICINA EDITABLE
 // ============================================================
 const MARCA = { verde: 0x02261e, lima: 0xdafc92, turquesa: 0x89c9c9, hueso: 0xf2f7f9, negro: 0x0b1210 };
-let calidadAlta = leer('calidad', true);
-const renderer = new THREE.WebGLRenderer({ canvas: $('#escena'), antialias: true, alpha: true, powerPreference: 'high-performance' });
-renderer.setClearColor(0x000000, 0);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// ---------- Calidad gráfica ----------
+// alta = PC/teléfono potente · media = perfil Switch (por defecto en Android) · ahorro = lo mínimo
+const NOMBRE_CALIDAD = { alta: 'Alta', media: 'Switch (fluida)', ahorro: 'Ahorro' };
+const esAndroid = /Android/i.test(navigator.userAgent);
+let calidad = leer('calidad2', null);
+if (!NOMBRE_CALIDAD[calidad]) calidad = esAndroid ? 'media' : (leer('calidad', true) === false ? 'ahorro' : 'alta');
+const LIVIANO = calidad !== 'alta';
+if (LIVIANO) document.body.classList.add('liviano');
+const CUADROS_MAX = LIVIANO ? 30 : 0; // tope de cuadros por segundo (0 = sin tope)
+
+const renderer = new THREE.WebGLRenderer({ canvas: $('#escena'), antialias: !LIVIANO, alpha: !LIVIANO, powerPreference: 'high-performance' });
+if (LIVIANO) renderer.setClearColor(0x05271f, 1); else renderer.setClearColor(0x000000, 0);
+renderer.shadowMap.enabled = calidad !== 'ahorro';
+renderer.shadowMap.type = calidad === 'alta' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+// Las sombras de los muebles se calculan UNA vez (no en cada cuadro): más fluido y sin parpadeo al caminar
+renderer.shadowMap.autoUpdate = false;
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
-const escena = new THREE.Scene();
-const camara = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.1, 200);
-const DESPLAZ_CAMARA = new THREE.Vector3(24, 21, 24);
+const escenaOficina = new THREE.Scene();
+let escena = escenaOficina;           // escena que se dibuja ahora (oficina o Gaming Room)
+const camara = new THREE.OrthographicCamera(-10, 10, 10, -10, 1, 120);
+const DESPLAZ_CAMARA = new THREE.Vector3(22, 26, 22); // cámara a 40°: más vista abierta sin salir de la oficina
 let zoom = 13;
 
 escena.add(new THREE.HemisphereLight(0xfff6ea, 0x3b5a52, 0.62));
-const sol = new THREE.DirectionalLight(0xffe7c4, 1.15);
-sol.castShadow = true;
-sol.shadow.camera.left = -26; sol.shadow.camera.right = 26; sol.shadow.camera.top = 22; sol.shadow.camera.bottom = -22;
-sol.shadow.camera.near = 1; sol.shadow.camera.far = 80;
-sol.shadow.bias = -0.0006; sol.shadow.normalBias = 0.02;
-sol.shadow.radius = 3;
-escena.add(sol); escena.add(sol.target);
+const sol = crearSol(escena, 0xffe7c4, 1.15, 4, 4, 30);
 const relleno = new THREE.DirectionalLight(0x9fd6d6, 0.28);
 relleno.position.set(-20, 14, 18);
 escena.add(relleno);
 
+function crearSol(destino, color, intensidad, cx, cz, radio) {
+  // Sol fijo que cubre todo el piso: su sombra no se mueve con la cámara
+  const s = new THREE.DirectionalLight(color, intensidad);
+  s.position.set(cx + 16, 30, cz + 10); s.target.position.set(cx, 0, cz);
+  s.castShadow = renderer.shadowMap.enabled;
+  Object.assign(s.shadow.camera, { left: -radio, right: radio, top: radio, bottom: -radio, near: 1, far: 100 });
+  s.shadow.bias = -0.0006; s.shadow.normalBias = 0.03;
+  s.shadow.radius = 3;
+  const tam = calidad === 'alta' ? 2048 : 1024;
+  s.shadow.mapSize.set(tam, tam);
+  destino.add(s); destino.add(s.target);
+  return s;
+}
 function aplicarCalidad() {
-  renderer.setPixelRatio(calidadAlta ? Math.min(devicePixelRatio || 1, 2) : 1);
-  sol.castShadow = calidadAlta;
-  const tam = calidadAlta ? 2048 : 1024;
-  sol.shadow.mapSize.set(tam, tam);
-  if (sol.shadow.map) { sol.shadow.map.dispose(); sol.shadow.map = null; }
+  renderer.setPixelRatio(calidad === 'alta' ? Math.min(devicePixelRatio || 1, 2) : calidad === 'media' ? 1 : 0.75);
   ajustarTamano();
 }
 function ajustarTamano() {
@@ -636,8 +729,12 @@ function ajustarTamano() {
   renderer.setSize(w, h, false);
   camara.left = -zoom * asp; camara.right = zoom * asp; camara.top = zoom; camara.bottom = -zoom;
   camara.updateProjectionMatrix();
+  pedirCuadro();
 }
-addEventListener('resize', ajustarTamano);
+addEventListener('resize', () => { if (typeof LUGARES !== 'undefined') recalcularZoom(); else ajustarTamano(); });
+// Pide un cuadro nuevo cuando el 3D está en pausa (menús, paneles, juegos)
+let cuadroPendiente = true;
+function pedirCuadro() { cuadroPendiente = true; }
 
 // ---------- Materiales ----------
 // Los colores de marca se pasan a espacio lineal para que se vean exactos en pantalla
@@ -646,8 +743,15 @@ function setLin(color, hex) { return color.setHex(hex).convertSRGBToLinear(); }
 const mats = {};
 function mate(color, opc) {
   const k = color + JSON.stringify(opc || {});
-  if (!mats[k]) mats[k] = new THREE.MeshStandardMaterial(Object.assign({ color: lin(color), roughness: 0.62, metalness: 0.0 }, opc || {}));
+  if (!mats[k]) mats[k] = material(Object.assign({ color: lin(color) }, opc || {}));
   return mats[k];
+}
+// En modo liviano se usa un material más simple (Lambert), que cuesta mucho menos a la gráfica de la Switch
+function material(p) {
+  if (!LIVIANO) return new THREE.MeshStandardMaterial(Object.assign({ roughness: 0.62, metalness: 0.0 }, p));
+  const q = {};
+  ['color', 'map', 'side', 'transparent', 'opacity', 'emissive'].forEach(k => { if (p[k] !== undefined) q[k] = p[k]; });
+  return new THREE.MeshLambertMaterial(q);
 }
 const C = {
   piso: 0xe8dfd0, pisoLinea: 0xd8ccb8, pared: 0xf2f7f9, paredCorte: MARCA.verde, zocalo: 0xdbe6e6,
@@ -701,8 +805,9 @@ const TEX_SOMBRA = (() => {
   x.fillStyle = g; x.fillRect(0, 0, 128, 128);
   return new THREE.CanvasTexture(cv);
 })();
+const MAT_SOMBRA = new THREE.MeshBasicMaterial({ map: TEX_SOMBRA, transparent: true, depthWrite: false });
 function sombraSuave(x, z, w, d, padre) {
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshBasicMaterial({ map: TEX_SOMBRA, transparent: true, depthWrite: false }));
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), MAT_SOMBRA);
   m.rotation.x = -Math.PI / 2; m.position.set(x, 0.02, z); m.renderOrder = 1;
   (padre || escena).add(m);
   return m;
@@ -774,30 +879,41 @@ function texturaPiso() {
 // ---------- La oficina ----------
 const ANCHO = 32, FONDO = 24;              // tamaño del piso
 const X0 = -16, X1 = 16, Z0 = -12, Z1 = 12; // bordes
-const ALTO_MURO = 6.2;
+const ALTO_MURO = 30;   // muros altos: su borde superior nunca entra en cuadro
+// La oficina se extiende hacia el frente y la derecha más allá de donde caminas:
+// así la cámara puede abrirse sin mostrar nunca el exterior.
+const EXTRA = 40;
+const XV1 = X1 + EXTRA, ZV1 = Z1 + EXTRA;     // borde visible del piso
+const XJ1 = X1 + 4, ZJ1 = Z1 + 4;             // hasta dónde se camina (marcado por una jardinera)
+const MAT_HAZ = new THREE.MeshBasicMaterial({ color: 0xfff3d6, transparent: true, opacity: 0.07, depthWrite: false, side: THREE.DoubleSide });
 function construirOficina() {
   // Base de la maqueta: losa con canto verde Editable
-  caja(ANCHO + 0.6, 1.2, FONDO + 0.6, MARCA.verde, 0, -1.45, 0, { r: 0.3 });
-  const piso = new THREE.Mesh(new THREE.BoxGeometry(ANCHO, 0.2, FONDO), new THREE.MeshStandardMaterial({ map: texturaPiso(), roughness: 0.8 }));
-  piso.position.set(0, -0.1, 0); piso.receiveShadow = true; escena.add(piso);
+  const AV = XV1 - X0, FV = ZV1 - Z0;
+  const texPiso = texturaPiso(); texPiso.repeat.set(2.2 * AV / ANCHO, 1.6 * FV / FONDO);
+  const piso = new THREE.Mesh(new THREE.BoxGeometry(AV, 0.2, FV), material({ map: texPiso, roughness: 0.8 }));
+  piso.position.set((X0 + XV1) / 2, -0.1, (Z0 + ZV1) / 2); piso.receiveShadow = true; escena.add(piso);
 
   // Muros (fondo e izquierdo) con canto verde, zócalo y ventanales
   const muro = (w, d, x, z) => {
     caja(w, ALTO_MURO, d, C.pared, x, 0, z, { r: 0.04 });
-    caja(w + 0.02, 0.18, d + 0.02, MARCA.verde, x, ALTO_MURO - 0.18, z, { r: 0.04, sombra: false });
+    caja(w + 0.02, 0.18, d + 0.02, MARCA.verde, x, 6.2, z, { r: 0.04, sombra: false });   // moldura verde
+    caja(w + 0.02, 0.1, d + 0.02, MARCA.turquesa, x, 9.4, z, { r: 0.03, sombra: false }); // segunda moldura
   };
-  muro(ANCHO, 0.6, 0, Z0 + 0.3);
-  muro(0.6, FONDO - 0.6, X0 + 0.3, 0.3);
-  caja(ANCHO - 0.6, 0.35, 0.08, C.zocalo, 0.3, 0, Z0 + 0.64, { r: 0.02, sombra: false });
-  caja(0.08, 0.35, FONDO - 1.2, C.zocalo, X0 + 0.64, 0, 0.6, { r: 0.02, sombra: false });
-  // Ventanales en el muro izquierdo (luz turquesa suave)
-  [-6.5, 3.5].forEach(z => {
+  muro(AV, 0.6, (X0 + XV1) / 2, Z0 + 0.3);
+  muro(0.6, FV - 0.6, X0 + 0.3, (Z0 + 0.6 + ZV1) / 2);
+  caja(AV - 0.6, 0.35, 0.08, C.zocalo, (X0 + 0.6 + XV1) / 2, 0, Z0 + 0.64, { r: 0.02, sombra: false });
+  caja(0.08, 0.35, FV - 1.2, C.zocalo, X0 + 0.64, 0, (Z0 + 1.2 + ZV1) / 2, { r: 0.02, sombra: false });
+  construirJardinera();
+  construirPuertaArcade();
+  construirPizarra();
+  // Ventanales en el muro izquierdo (luz turquesa suave), también a lo largo de la oficina extendida
+  [-6.5, 3.5, 22, 34, 46].forEach(z => {
     caja(0.12, 3.4, 5.2, MARCA.verde, X0 + 0.62, 1.4, z, { r: 0.05, sombra: false });
     const vidrio = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 3.0), new THREE.MeshBasicMaterial({ color: lin(0xcfeeee) }));
     vidrio.rotation.y = Math.PI / 2; vidrio.position.set(X0 + 0.69, 2.9, z); escena.add(vidrio);
     const marco = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 3.0), new THREE.MeshBasicMaterial({ color: lin(MARCA.verde) }));
     marco.rotation.y = Math.PI / 2; marco.position.set(X0 + 0.7, 2.9, z); escena.add(marco);
-    const haz = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 9), new THREE.MeshBasicMaterial({ color: 0xfff3d6, transparent: true, opacity: 0.07, depthWrite: false, side: THREE.DoubleSide }));
+    const haz = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 9), MAT_HAZ);
     haz.rotation.x = -Math.PI / 2; haz.rotation.z = Math.PI / 2; haz.position.set(X0 + 5, 0.03, z); escena.add(haz);
   });
   // Panel del logo
@@ -826,8 +942,121 @@ function construirOficina() {
   caja(1.0, 1.1, 0.9, 0x1b1f1e, 14.4, 2.35, 1.0, { r: 0.12 });
   [3.0, 3.6].forEach(z => cilindro(0.18, 0.15, 0.36, 0xf2f7f9, 14.3, 2.35, z, {}));
   // Lámparas colgantes sobre los escritorios
-  ESTACIONES_POS.forEach(p => lampara(p.x, p.z - 0.8));
+  // (sin lámparas colgantes: con la cámara alta parecían postes)
 }
+// ---------- Jardinera: marca hasta dónde se camina (más allá sigue la oficina) ----------
+function construirJardinera() {
+  const tramo = (x0, z0, x1, z1) => {
+    const largo = Math.hypot(x1 - x0, z1 - z0), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, horiz = Math.abs(x1 - x0) > Math.abs(z1 - z0);
+    caja(horiz ? largo : 1.0, 0.9, horiz ? 1.0 : largo, MARCA.verde, cx, 0, cz, { r: 0.12 });
+    caja(horiz ? largo - 0.3 : 0.75, 0.06, horiz ? 0.75 : largo - 0.3, 0x3a2a1e, cx, 0.9, cz, { r: 0.02, sombra: false });
+    const n = Math.floor(largo / 1.6);
+    for (let i = 0; i <= n; i++) {
+      const f = n ? i / n : 0.5, x = x0 + (x1 - x0) * f, z = z0 + (z1 - z0) * f;
+      const h = new THREE.Mesh(new THREE.IcosahedronGeometry(0.62, 0), mate(i % 2 ? C.hoja : C.hoja2, { flatShading: true }));
+      h.position.set(x, 1.25 + (i % 3) * 0.12, z); h.scale.set(1, 0.85, 1); h.rotation.set(i, i * 2, 0); h.castShadow = true; escena.add(h);
+    }
+  };
+  tramo(XJ1, Z0 + 1.2, XJ1, ZJ1);
+  tramo(X0 + 1.2, ZJ1, XJ1 - 0.6, ZJ1);
+  // Más allá de la jardinera la oficina sigue: salas de reuniones, zonas lounge y plantas
+  decorarAlrededor({ x0: X0, z0: Z0, xj: XJ1, zj: ZJ1, xv: XV1, zv: ZV1 }, 'oficina');
+}
+function mesaReunion(cx, cz) {
+    caja(6, 0.14, 2.6, C.mesa, cx, 1.9, cz, { r: 0.06 });
+    [[-2.5, -1], [2.5, -1], [-2.5, 1], [2.5, 1]].forEach(([dx, dz]) => caja(0.14, 1.9, 0.14, C.pata, cx + dx, 0, cz + dz, { r: 0.04 }));
+    [-2, 0, 2].forEach(dx => [-1, 1].forEach(l => caja(1.0, 1.1, 0.9, C.silla, cx + dx, 0, cz + l * 2.0, { r: 0.18 })));
+    sombraSuave(cx, cz, 9, 6);
+}
+function lounge(cx, cz, colAlfombra) {
+  caja(9, 0.06, 6, colAlfombra, cx, 0, cz, { r: 0.03, sombra: false });
+  caja(7.5, 1.0, 2.0, C.sofa, cx, 0, cz + 2, { r: 0.35 }); caja(7.5, 1.6, 0.6, C.sofa, cx, 0.6, cz + 2.9, { r: 0.28 });
+  cilindro(1.2, 1.2, 0.12, C.madera, cx, 1.0, cz - 1.5, {}); cilindro(0.1, 0.1, 1.0, C.pata, cx, 0, cz - 1.5, {});
+}
+// Llena el piso que está más allá de donde caminas, en una cuadrícula con algo de variedad
+function decorarAlrededor(R, tipo) {
+  const paso = 8;
+  let n = 0;
+  for (let x = R.x0 + 4; x < R.xv - 3; x += paso) for (let z = R.z0 + 4; z < R.zv - 3; z += paso) {
+    const fuera = x > R.xj + 4 || z > R.zj + 4;
+    if (!fuera) continue;
+    const k = (Math.floor(x * 7 + z * 13) % 7 + 7) % 7; n++;
+    const jx = ((n * 37) % 5) - 2, jz = ((n * 53) % 5) - 2; // pequeño desorden para que no se vea en filas perfectas
+    if (tipo === 'oficina') {
+      if (k === 0) mesaReunion(x + jx * 0.4, z);
+      else if (k === 3) lounge(x, z + jz * 0.4, n % 2 ? MARCA.turquesa : MARCA.lima);
+      else planta(x + jx, z + jz, 1.0 + (n % 3) * 0.2);
+    } else {
+      if (k === 0 || k === 4) { caja(1.8, 4.2, 2.0, [0x0d3b30, 0x2a2310, 0x3a1512, 0x0b2f3a][n % 4], x, 0, z, { r: 0.1 }); caja(1.9, 0.1, 1.9, [MARCA.lima, MARCA.turquesa][n % 2], x, 4.2, z, { r: 0.03, sombra: false }); }
+      else planta(x + jx, z + jz, 1.1 + (n % 2) * 0.2);
+    }
+  }
+}
+
+// ---------- Puerta al Gaming Room (en el muro del fondo) ----------
+const PUERTA = { x: 17.2, z: Z0 + 0.6 };
+function texturaPuerta() {
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 416;
+  const x = cv.getContext('2d');
+  x.fillStyle = '#0b1210'; x.fillRect(0, 0, 256, 416);
+  x.strokeStyle = '#dafc92'; x.lineWidth = 8; x.strokeRect(14, 14, 228, 388);
+  x.strokeStyle = '#89c9c9'; x.lineWidth = 3; x.strokeRect(28, 28, 200, 360);
+  x.fillStyle = '#dafc92'; x.font = '700 40px "Roboto Mono", monospace'; x.textAlign = 'center';
+  x.fillText('GAMING', 128, 150); x.fillText('ROOM', 128, 196);
+  // palanca de arcade dibujada
+  x.fillStyle = '#89c9c9'; x.fillRect(88, 268, 80, 18);
+  x.fillRect(124, 222, 8, 50); x.beginPath(); x.arc(128, 222, 18, 0, Math.PI * 2); x.fillStyle = '#ff5a52'; x.fill();
+  x.fillStyle = '#dafc92'; x.beginPath(); x.arc(200, 214, 7, 0, Math.PI * 2); x.fill();
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; return t;
+}
+function construirPuertaArcade() {
+  const { x, z } = PUERTA;
+  caja(3.2, 4.8, 0.2, MARCA.verde, x, 0, z + 0.08, { r: 0.06 });
+  const hoja = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 4.25), new THREE.MeshBasicMaterial({ map: texturaPuerta(), toneMapped: false }));
+  hoja.position.set(x, 2.15, z + 0.2); escena.add(hoja);
+  const letrero = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.8), new THREE.MeshBasicMaterial({ map: pastilla('▶ GAMING ROOM', { ancho: 640, alto: 140, fondo: '#0b1210', color: '#dafc92', borde: '#89c9c9', fuente: '700 58px "Roboto Mono", monospace' }), toneMapped: false, transparent: true }));
+  letrero.position.set(x, 5.5, z + 0.12); escena.add(letrero);
+  caja(3.0, 0.04, 1.6, MARCA.lima, x, 0, z + 1.2, { r: 0.02, sombra: false }); // tapete
+}
+
+// ---------- Pizarra del equipo (en el muro izquierdo) ----------
+const PIZARRA = { x: X0 + 0.6, z: 13.6 };
+function texturaPizarra() {
+  const cv = document.createElement('canvas'); cv.width = 1100; cv.height = 640;
+  const x = cv.getContext('2d');
+  x.fillStyle = '#fbfdfc'; x.fillRect(0, 0, 1100, 640);
+  x.fillStyle = '#02261e'; x.fillRect(0, 0, 1100, 92);
+  x.fillStyle = '#dafc92'; x.font = '700 46px Poppins, sans-serif'; x.textAlign = 'left'; x.fillText('PIZARRA DEL EQUIPO', 34, 62);
+  x.fillStyle = '#02261e'; x.font = '700 34px "Roboto Mono", monospace'; x.fillText('FAVORITAS', 40, 150); x.fillText('EFEMÉRIDES', 590, 150);
+  // notas adhesivas
+  const notas = ['#dafc92', '#89c9c9', '#ffe08a', '#dafc92', '#f2f7f9', '#89c9c9'];
+  notas.forEach((c, i) => {
+    const nx = 40 + (i % 3) * 160, ny = 185 + Math.floor(i / 3) * 200;
+    x.save(); x.translate(nx + 70, ny + 80); x.rotate((i % 2 ? 1 : -1) * 0.05);
+    x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(-66, -74, 140, 160);
+    x.fillStyle = c; x.fillRect(-70, -80, 140, 160);
+    x.fillStyle = 'rgba(2,38,30,.55)'; for (let l = 0; l < 4; l++) x.fillRect(-52, -46 + l * 30, 104 - (l % 2) * 30, 7);
+    x.restore();
+  });
+  // calendario
+  const meses = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
+  x.font = '600 24px "Roboto Mono", monospace'; x.fillStyle = '#4d6a63'; x.fillText(meses[new Date().getMonth()], 590, 190);
+  for (let f = 0; f < 5; f++) for (let c = 0; c < 7; c++) {
+    const cx = 590 + c * 68, cy = 214 + f * 76;
+    x.strokeStyle = 'rgba(2,38,30,.25)'; x.lineWidth = 2; x.strokeRect(cx, cy, 60, 66);
+    if ((f * 7 + c) % 6 === 2) { x.fillStyle = (f + c) % 2 ? '#89c9c9' : '#dafc92'; x.beginPath(); x.arc(cx + 30, cy + 33, 20, 0, Math.PI * 2); x.fill(); }
+  }
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t;
+}
+function construirPizarra() {
+  const { x, z } = PIZARRA;
+  caja(0.2, 3.5, 6.0, MARCA.verde, x + 0.1, 1.1, z, { r: 0.08 });
+  const cara = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 3.26), new THREE.MeshBasicMaterial({ map: texturaPizarra(), toneMapped: false }));
+  cara.rotation.y = Math.PI / 2; cara.position.set(x + 0.22, 2.85, z); escena.add(cara);
+  caja(0.5, 0.1, 5.0, C.madera, x + 0.35, 0.95, z, { r: 0.03 }); // bandeja de marcadores
+  [[-1.2, 0xff5a52], [-0.8, 0x02261e], [-0.4, 0x89c9c9]].forEach(([dz, col]) => caja(0.14, 0.1, 0.32, col, x + 0.4, 1.05, z + dz, { r: 0.04, sombra: false }));
+}
+
 function planta(x, z, s) {
   cilindro(0.55 * s, 0.42 * s, 1.1 * s, C.maceta, x, 0, z, {});
   sombraSuave(x, z, 2.6 * s, 2.6 * s);
@@ -841,7 +1070,7 @@ function planta(x, z, s) {
   }
 }
 function lampara(x, z) {
-  const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 3.2, 6), mate(C.pata));
+  const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.2, 6), mate(C.pata));
   cable.position.set(x, 8.6, z); escena.add(cable);
   const pantalla = new THREE.Mesh(new THREE.ConeGeometry(0.75, 0.6, 24, 1, true), mate(MARCA.verde, { side: THREE.DoubleSide }));
   pantalla.position.set(x, 6.9, z); escena.add(pantalla);
@@ -976,6 +1205,8 @@ function construirEstacion(e) {
   const alerta = etiqueta('!', 0.75, { ancho: 120, alto: 120, fondo: '#ff5a52', color: '#ffffff', fuente: '700 84px Poppins, sans-serif' });
   alerta.position.set(1.65, 4.75, zs - 0.2); alerta.visible = false; g.add(alerta);
   e.obj = { grupo: g, pantalla, fig, anillo, alerta };
+  // Lo que se anima no se fusiona con los muebles
+  fig.userData.dinamico = true; pantalla.userData.dinamico = true; anillo.userData.dinamico = true;
   e.estado = { estado: 'Inactivo', detalle: 'Sin datos todavía.' };
   e.cajas = [
     { x0: e.x - 2.6, x1: e.x + 2.6, z0: e.z - 1.4, z1: e.z + 1.4 },                     // escritorio
@@ -990,18 +1221,90 @@ let jugadorFig, sombraJugador;
 const yo = { x: -1.5, z: 2.2, rot: Math.PI * 0.85, vel: 0 };
 function construirJugador() {
   jugadorFig = personaje(MARCA.lima, C.piel4, C.pelo1, 'gorra', MARCA.verde);
+  jugadorFig.traverse(o => { o.castShadow = false; }); // tú te mueves: llevas tu sombra suave propia
+  jugadorFig.userData.dinamico = true;
   escena.add(jugadorFig);
   const nombre = etiqueta('Freddy', 0.55, { ancho: 400, alto: 110, fondo: '#dafc92', color: '#02261e', fuente: '700 52px Poppins, sans-serif' });
   nombre.position.y = 3.6; jugadorFig.add(nombre);
   sombraJugador = sombraSuave(0, 0, 2.2, 2.2);
+  sombraJugador.userData.dinamico = true;
 }
 
-function colisiona(x, z) {
-  if (x < X0 + 1.2 || x > X1 - 0.8 || z < Z0 + 1.4 || z > Z1 - 0.7) return true;
-  if (x > 13.0 && z > -1.0 && z < 6.0) return true;                    // barra de café
-  if (x < -5.6 && z > 7.9) return true;                                 // sofá
+function colisiona(x, z) { return lugar === 'sala' ? colisionaSala(x, z) : colisionaOficina(x, z); }
+function colisionaOficina(x, z) {
+  if (x < X0 + 1.2 || x > XJ1 - 0.9 || z < Z0 + 1.4 || z > ZJ1 - 0.9) return true;
+  if (x > 13.0 && x < 15.9 && z > -1.0 && z < 6.0) return true;         // barra de café
+  if (x < -5.6 && z > 7.9 && z < 11.1) return true;                     // sofá
   if (Math.hypot(x + 10, z - 5.6) < 2.0) return true;                   // mesa de centro
   return ESTACIONES.some(e => e.cajas.some(c => x > c.x0 - 0.45 && x < c.x1 + 0.45 && z > c.z0 - 0.45 && z < c.z1 + 0.45));
+}
+
+// ============================================================
+//  LUGARES Y CÁMARA (siempre dentro de la habitación)
+// ============================================================
+let lugar = 'oficina';
+const LUGARES = {
+  // x0..x1 / z0..z1 = piso · muro = cara interior de los muros del fondo y la izquierda · alto = altura de los muros
+  oficina: { escena: escenaOficina, x0: X0, x1: XV1, z0: Z0, z1: ZV1, muroX: X0 + 0.6, muroZ: Z0 + 0.6, alto: ALTO_MURO, cx: (X0 + XJ1) / 2, cz: (Z0 + ZJ1) / 2, jx1: XJ1, jz1: ZJ1 },
+  sala: null // se crea al entrar por primera vez al Gaming Room
+};
+const VISTA_DIR = DESPLAZ_CAMARA.clone().normalize();               // hacia la cámara
+const VISTA_FWD = VISTA_DIR.clone().negate();                       // hacia donde mira
+const VISTA_DER = new THREE.Vector3().crossVectors(VISTA_FWD, new THREE.Vector3(0, 1, 0)).normalize();
+const VISTA_ARR = new THREE.Vector3().crossVectors(VISTA_DER, VISTA_FWD).normalize();
+const _o = new THREE.Vector3();
+// ¿El rayo de ese punto de la pantalla cae sobre el piso o los muros de la habitación?
+function rayoDentro(T, u, v, L, z) {
+  const asp = innerWidth / innerHeight;
+  _o.copy(T).addScaledVector(VISTA_DIR, 60).addScaledVector(VISTA_DER, u * z * asp).addScaledVector(VISTA_ARR, v * z);
+  const d = VISTA_FWD, eps = 0.05;
+  let t = (0 - _o.y) / d.y; // piso
+  let x = _o.x + d.x * t, zz = _o.z + d.z * t;
+  if (x >= L.x0 + eps && x <= L.x1 - eps && zz >= L.z0 + eps && zz <= L.z1 - eps) return true;
+  t = (L.muroZ - _o.z) / d.z; // muro del fondo
+  x = _o.x + d.x * t; let y = _o.y + d.y * t;
+  if (t > 0 && x >= L.x0 && x <= L.x1 - eps && y >= 0 && y <= L.alto - eps) return true;
+  t = (L.muroX - _o.x) / d.x; // muro izquierdo
+  zz = _o.z + d.z * t; y = _o.y + d.y * t;
+  if (t > 0 && zz >= L.z0 && zz <= L.z1 - eps && y >= 0 && y <= L.alto - eps) return true;
+  return false;
+}
+const PUNTOS_BORDE = [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1], [0, 1], [-1, 0], [1, 0], [-0.5, 1], [0.5, 1], [-0.5, -1], [0.5, -1]];
+function vistaDentro(T, L, z) { return PUNTOS_BORDE.every(([u, v]) => rayoDentro(T, u, v, L, z)); }
+function centroLugar(L) { return new THREE.Vector3(L.cx, 0, L.cz); }
+// Zoom más alejado posible sin que se vea nada de afuera
+function zoomMaximo(L) {
+  // Busca el punto desde donde cabe la vista más abierta y lo usa como centro de la cámara
+  let mejor = 0, mc = null;
+  const c = new THREE.Vector3();
+  // solo busca dentro de la zona por donde caminas (ahí debe quedar el centro de la cámara)
+  fuera: for (let cx = L.x0 + 2; cx <= L.jx1 - 2; cx += 2) for (let cz = L.z0 + 2; cz <= L.jz1 - 2; cz += 2) {
+    c.set(cx, 0, cz);
+    if (!vistaDentro(c, L, mejor + 0.05)) continue;
+    let lo = mejor, hi = ZOOM_TOPE + 0.05;
+    for (let i = 0; i < 12; i++) { const m = (lo + hi) / 2; if (vistaDentro(c, L, m)) lo = m; else hi = m; }
+    if (lo > mejor) { mejor = lo; mc = [cx, cz]; }
+    if (mejor >= ZOOM_TOPE) break fuera;
+  }
+  if (mc) { L.cx = mc[0]; L.cz = mc[1]; }
+  return Math.floor(mejor * 10) / 10;
+}
+let zoomMax = 13;
+const ZOOM_TOPE = 14; // la vista más abierta permitida (antes era 13)
+function recalcularZoom() {
+  const L = LUGARES[lugar];
+  zoomMax = Math.min(ZOOM_TOPE, zoomMaximo(L));
+  zoom = Math.max(6, Math.min(zoom, zoomMax));
+  ajustarTamano();
+}
+// Lleva el objetivo de la cámara lo más cerca posible de donde quiere ir, sin salirse de la habitación
+const _T = new THREE.Vector3();
+function limitarObjetivo(deseado, L) {
+  if (vistaDentro(deseado, L, zoom)) return deseado;
+  const c = centroLugar(L);
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 12; i++) { const m = (lo + hi) / 2; _T.lerpVectors(c, deseado, m); if (vistaDentro(_T, L, zoom)) lo = m; else hi = m; }
+  return deseado.lerpVectors(c, deseado, lo);
 }
 
 // ============================================================
@@ -1010,18 +1313,30 @@ function colisiona(x, z) {
 let estacionCerca = null;
 const reloj = new THREE.Clock();
 const objetivoCam = new THREE.Vector3(0, 0, 4);
+const deseadoCam = new THREE.Vector3();
 const tmpCol = new THREE.Color();
+const COL_PANT_A = lin(0xd9fbb0), COL_PANT_B = lin(0xb8f0cf);
+let ultimoRender = 0, camSaltar = true;
 function bucle() {
   requestAnimationFrame(bucle);
   const dt = Math.min(reloj.getDelta(), 0.05), t = reloj.elapsedTime, ahora = performance.now();
   const entrada = leerEntradas();
 
+  let nuevas = [];
   if (pantalla === 'calibrar' && calib) pasoCalibracion(ahora);
-  else pulsaciones(entrada, ahora).forEach(manejar);
+  else nuevas = pulsaciones(entrada, ahora);
 
-  // Movimiento (la vista es isométrica: "arriba" en la palanca va hacia el fondo de la oficina)
+  // Jugando en una máquina arcade: el 3D se apaga por completo
+  if (pantalla === 'juego') { ARCADE.tick(dt, entrada, nuevas); return; }
+  nuevas.forEach(manejar);
+
+  const activo = pantalla === 'oficina' && !enTransicion;
+  // Con menús, paneles o la pizarra abiertos el 3D queda en pausa (solo se dibuja si algo lo pide)
+  if (!activo && !cuadroPendiente) return;
+
+  // Movimiento (la vista es isométrica: "arriba" en la palanca va hacia el fondo)
   let mx = 0, mz = 0;
-  if (pantalla === 'oficina' && Math.hypot(entrada.x, entrada.y) > 0.2) {
+  if (activo && Math.hypot(entrada.x, entrada.y) > 0.2) {
     mx = (entrada.x + entrada.y) * 0.7071; mz = (entrada.y - entrada.x) * 0.7071;
   }
   const mag = Math.min(1, Math.hypot(mx, mz));
@@ -1044,7 +1359,7 @@ function bucle() {
   sombraJugador.position.set(yo.x, 0.03, yo.z);
 
   // Agentes: animación según su estado
-  ESTACIONES.forEach((e, i) => {
+  if (lugar === 'oficina') ESTACIONES.forEach((e, i) => {
     const est = e.estado.estado, o = e.obj, f = o.fig.userData;
     const trabajando = est === 'Trabajando';
     f.brazos[0].rotation.x = trabajando ? -1.25 + Math.sin(t * 16 + i) * 0.18 : -1.05;
@@ -1055,23 +1370,32 @@ function bucle() {
     const col = COLOR_ESTADO[est] || 0x7d8a87;
     const pulso = (trabajando || est === 'Error' || est === 'En cola') ? 0.6 + 0.4 * Math.abs(Math.sin(t * 3)) : 0.85;
     o.anillo.material.color.copy(setLin(tmpCol, col).multiplyScalar(pulso));
-    if (trabajando) setLin(o.pantalla.material.color, Math.sin(t * 6 + i) > 0 ? 0xd9fbb0 : 0xb8f0cf);
+    if (trabajando) o.pantalla.material.color.copy(COL_PANT_A).lerp(COL_PANT_B, 0.5 + 0.5 * Math.sin(t * 2.2 + i));
     else setLin(o.pantalla.material.color, est === 'Error' ? 0xff8f88 : est === 'Inactivo' ? 0x3b4a47 : 0xcfeeee);
     o.alerta.visible = est === 'Error' && Math.sin(t * 5) > -0.3;
   });
 
-  // Estación más cercana
+  // Lo más cercano con lo que puedes interactuar
   let cerca = null, dmin = 2.8;
-  if (pantalla === 'oficina') ESTACIONES.forEach(e => { const d = Math.hypot(yo.x - e.zona.x, yo.z - e.zona.z); if (d < dmin) { dmin = d; cerca = e; } });
-  if (cerca !== estacionCerca) { estacionCerca = cerca; pintarPrompt(); if (cerca) sonar('paso'); }
+  if (activo) interactivos().forEach(e => { const d = Math.hypot(yo.x - e.zona.x, yo.z - e.zona.z); if (d < dmin) { dmin = d; cerca = e; } });
+  if (cerca !== estacionCerca && !confirmacion) { estacionCerca = cerca; pintarPrompt(); if (cerca) sonar('paso'); }
 
-  // Cámara que sigue al jugador con suavidad
-  objetivoCam.lerp(new THREE.Vector3(yo.x * 0.75, 0, yo.z * 0.75 - 1.5), Math.min(1, dt * 3.5));
-  camara.position.copy(objetivoCam).add(DESPLAZ_CAMARA);
-  camara.lookAt(objetivoCam);
-  sol.position.set(objetivoCam.x + 16, 30, objetivoCam.z + 10);
-  sol.target.position.copy(objetivoCam);
+  // Cámara: sigue al jugador con suavidad, sin salirse de la habitación
+  const L = LUGARES[lugar];
+  deseadoCam.set(yo.x, 0, yo.z);
+  limitarObjetivo(deseadoCam, L);
+  if (camSaltar) { objetivoCam.copy(deseadoCam); camSaltar = false; }
+  else objetivoCam.lerp(deseadoCam, Math.min(1, dt * 3.5));
+  // Se alinea a los píxeles de la pantalla para que bordes y líneas no "titilen" al moverte
+  const upp = (2 * zoom) / Math.max(1, renderer.domElement.height);
+  const a = objetivoCam.dot(VISTA_DER), b = objetivoCam.dot(VISTA_ARR);
+  const da = Math.round(a / upp) * upp - a, db = Math.round(b / upp) * upp - b;
+  camara.position.copy(objetivoCam).add(DESPLAZ_CAMARA).addScaledVector(VISTA_DER, da).addScaledVector(VISTA_ARR, db);
+  camara.lookAt(_T.copy(camara.position).sub(DESPLAZ_CAMARA));
 
+  // Tope de cuadros por segundo en la Switch: 30 estables se sienten más fluidos que 60 con tirones
+  if (CUADROS_MAX && activo && !cuadroPendiente && ahora - ultimoRender < 1000 / CUADROS_MAX - 4) return;
+  ultimoRender = ahora; cuadroPendiente = false;
   renderer.render(escena, camara);
 }
 
@@ -1082,6 +1406,7 @@ function manejar(a) {
   if (pantalla === 'pin') return manejarPin(a);
   if (pantalla === 'menu') return manejarMenu(a);
   if (pantalla === 'panel') return manejarPanel(a);
+  if (pantalla === 'pizarra') return manejarPizarra(a);
   if (pantalla !== 'oficina') return;
   if (confirmacion) {
     if (a === 'A') { const f = confirmacion; confirmacion = null; pintarPrompt(); f(); }
@@ -1089,8 +1414,9 @@ function manejar(a) {
     return;
   }
   if (a === 'MAS') return abrirMenu();
-  if (a === 'L') { zoom = Math.min(24, zoom + 2); ajustarTamano(); return; }
-  if (a === 'R') { zoom = Math.max(9, zoom - 2); ajustarTamano(); return; }
+  // L aleja y R acerca, sin pasar del límite donde se vería el exterior
+  if (a === 'L') { zoom = Math.min(zoomMax, zoom + 1.5); ajustarTamano(); if (zoom === zoomMax) avisar('Esa es la vista más abierta.'); return; }
+  if (a === 'R') { zoom = Math.max(6, zoom - 1.5); ajustarTamano(); return; }
   if (estacionCerca) {
     const acc = estacionCerca.acciones.find(x => x.b === a);
     if (acc) acc.f();
@@ -1116,7 +1442,7 @@ function pintarPrompt() {
   p.classList.remove('oculto');
   $('#prompt-icono').textContent = e.icono;
   $('#prompt-nombre').textContent = e.nombre;
-  $('#prompt-estado').innerHTML = '<span class="punto-estado" style="background:' + (CSS_ESTADO[e.estado.estado] || '#9aa1ad') + '"></span>' +
+  $('#prompt-estado').innerHTML = e.sub ? e.sub() : '<span class="punto-estado" style="background:' + (CSS_ESTADO[e.estado.estado] || '#9aa1ad') + '"></span>' +
     esc(e.estado.estado) + ' · ' + esc(e.estado.detalle || '');
   $('#prompt-acciones').innerHTML = e.acciones.map(x => boton(x.b, x.t)).join('');
 }
@@ -1223,7 +1549,7 @@ function manejarPanel(a) {
   }
   const decisiones = PANEL.tipo === 'piezas'
     ? { A: ['aprobar', 'sale-si', 'si', '✅ Pieza aprobada.'], B: ['descartar', 'sale-no', 'no', '🗑 Pieza descartada.'], Y: ['producida', 'sale-arriba', 'creativo', '🎬 Marcada como producida.'] }
-    : { A: ['si', 'sale-si', 'si', '👍 Anotado: te gusta.'], B: ['no', 'sale-no', 'no', '🗑 Descartada.'], Y: ['creativo', 'sale-arriba', 'creativo', '✍️ Enviada al Creativo.'] };
+    : { A: ['si', 'sale-si', 'si', '⭐ Guardada en la pizarra de Favoritas.'], B: ['no', 'sale-no', 'no', '🗑 Descartada.'], Y: ['creativo', 'sale-arriba', 'creativo', '✍️ Enviada al Creativo.'] };
   const d = decisiones[a];
   if (d) decidir(c, d[0], d[1], d[2], d[3]);
 }
@@ -1235,6 +1561,7 @@ async function decidir(carta, decision, animacion, sonido, mensaje) {
   sonar(sonido);
   try {
     const r = await api({ accion: 'decidir', tipo: PANEL.tipo, id: carta.id, decision: decision });
+    if (decision === 'si' && PANEL.tipo !== 'piezas') guardarFavoritaLocal(PANEL.tipo, carta); // aparece en la pizarra
     PANEL.cartas.splice(PANEL.i, 1);
     if (PANEL.i >= PANEL.cartas.length) PANEL.i = 0;
     avisar(mensaje);
@@ -1247,6 +1574,307 @@ async function decidir(carta, decision, animacion, sonido, mensaje) {
     sonar('error'); avisar(err.message, true); manejarPinMalo(err);
   }
   setTimeout(() => { PANEL.ocupado = false; pintarCarta(true); }, 260);
+}
+
+// ============================================================
+//  OBJETOS CON LOS QUE SE INTERACTÚA
+// ============================================================
+const OBJ_PUERTA = { id: 'puerta', nombre: 'Gaming Room', icono: '🕹️', zona: { x: PUERTA.x, z: PUERTA.z + 2.3 },
+  sub: () => esc(ARCADE.juegos.length + ' máquinas arcade · tu mejor récord: ' + Math.max(0, ...ARCADE.juegos.map(j => ARCADE.record(j.id)))),
+  acciones: [{ b: 'A', t: 'Entrar', f: () => irA('sala') }] };
+const OBJ_PIZARRA = { id: 'pizarra', nombre: 'Pizarra del equipo', icono: '📌', zona: { x: PIZARRA.x + 2.2, z: PIZARRA.z },
+  sub: () => {
+    const p = EFEMERIDES.proximas(new Date(), 1)[0];
+    return esc(favoritasLocales().length + ' favoritas guardadas' + (p ? ' · Próxima efeméride: ' + p.nombre + ' (' + p.fecha.getDate() + ' ' + EFEMERIDES.mesCorto(p.fecha) + ')' : ''));
+  },
+  acciones: [{ b: 'A', t: 'Favoritas', f: () => abrirPizarra('favoritas') }, { b: 'X', t: 'Calendario', f: () => abrirPizarra('calendario') }] };
+function interactivos() {
+  return lugar === 'sala' ? SALA.objetos : ESTACIONES.concat([OBJ_PIZARRA, OBJ_PUERTA]);
+}
+
+// ============================================================
+//  OPTIMIZACIÓN: fusiona los muebles que no se mueven
+//  (cientos de piezas sueltas → pocas piezas grandes = muchas menos llamadas a la gráfica)
+// ============================================================
+function fusionarEstaticos(raiz) {
+  raiz.updateMatrixWorld(true);
+  const grupos = new Map();
+  raiz.traverse(o => {
+    if (!o.isMesh || Array.isArray(o.material)) return;
+    for (let p = o; p; p = p.parent) if (p.userData && p.userData.dinamico) return;
+    const g = o.geometry;
+    if (!g.attributes.position || !g.attributes.normal) return;
+    const k = o.material.uuid + '|' + o.castShadow + '|' + o.receiveShadow + '|' + o.renderOrder;
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k).push(o);
+  });
+  grupos.forEach(lista => {
+    if (lista.length < 2) return;
+    const partes = lista.map(m => { const g = (m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone()); g.applyMatrix4(m.matrixWorld); return g; });
+    const total = partes.reduce((n, g) => n + g.attributes.position.count, 0);
+    const pos = new Float32Array(total * 3), nor = new Float32Array(total * 3), uv = new Float32Array(total * 2);
+    let i = 0;
+    partes.forEach(g => {
+      const n = g.attributes.position.count;
+      pos.set(g.attributes.position.array, i * 3); nor.set(g.attributes.normal.array, i * 3);
+      if (g.attributes.uv) uv.set(g.attributes.uv.array, i * 2);
+      i += n; g.dispose();
+    });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    geo.computeBoundingSphere();
+    const m0 = lista[0], unida = new THREE.Mesh(geo, m0.material);
+    unida.castShadow = m0.castShadow; unida.receiveShadow = m0.receiveShadow; unida.renderOrder = m0.renderOrder;
+    lista.forEach(m => m.parent.remove(m));
+    raiz.add(unida);
+  });
+}
+
+// ============================================================
+//  CAMBIAR DE LUGAR (oficina ⇄ Gaming Room)
+// ============================================================
+let enTransicion = false;
+function irA(destino) {
+  if (enTransicion) return;
+  enTransicion = true;
+  sonar('abrir');
+  $('#fundido').classList.add('on');
+  setTimeout(() => {
+    if (destino === 'sala' && !LUGARES.sala) construirSala();
+    lugar = destino;
+    escena = LUGARES[destino].escena;
+    escena.add(jugadorFig); escena.add(sombraJugador); // tú te mudas de escena
+    const llegada = destino === 'sala' ? SALA.llegada : { x: OBJ_PUERTA.zona.x, z: OBJ_PUERTA.zona.z + 0.4, rot: 0 };
+    yo.x = llegada.x; yo.z = llegada.z; yo.rot = llegada.rot; yo.vel = 0;
+    recalcularZoom();
+    camSaltar = true;
+    renderer.shadowMap.needsUpdate = true; // sombras fijas de la habitación nueva
+    estacionCerca = null; pintarPrompt();
+    pedirCuadro();
+    setTimeout(() => { $('#fundido').classList.remove('on'); enTransicion = false; }, 60);
+  }, 260);
+}
+
+// ============================================================
+//  GAMING ROOM
+// ============================================================
+const SALA = { objetos: [], llegada: null };
+const SX0 = -12, SX1 = 12, SZ0 = -9, SZ1 = 9;          // hasta dónde se camina
+const SXV1 = SX1 + 38, SZV1 = SZ1 + 38;                // la sala sigue más allá (no se ve el exterior)
+function texturaPisoArcade() {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 512;
+  const x = cv.getContext('2d');
+  x.fillStyle = '#0b1f1a'; x.fillRect(0, 0, 512, 512);
+  x.strokeStyle = 'rgba(137,201,201,.22)'; x.lineWidth = 3;
+  for (let i = 0; i <= 512; i += 64) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 512); x.stroke(); x.beginPath(); x.moveTo(0, i); x.lineTo(512, i); x.stroke(); }
+  x.fillStyle = 'rgba(218,252,146,.10)'; for (let i = 0; i < 40; i++) x.fillRect((i * 97) % 512, (i * 211) % 512, 6, 6);
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4;
+  return t;
+}
+function texturaPantallaJuego(j) {
+  const cv = document.createElement('canvas'); cv.width = 320; cv.height = 240;
+  const x = cv.getContext('2d');
+  j.portada(x, 320, 240);
+  const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.minFilter = THREE.LinearFilter;
+  return t;
+}
+function construirMaquina(j, mx, mz) {
+  const cuerpo = j.cuerpo, g = new THREE.Group(); g.position.set(mx, 0, mz); escena.add(g);
+  caja(2.4, 4.6, 1.7, cuerpo, 0, 0, 0, { r: 0.1, padre: g });
+  caja(2.5, 0.5, 1.8, MARCA.negro, 0, 0, 0, { r: 0.08, padre: g });                         // zócalo
+  [-1.22, 1.22].forEach(sx => caja(0.06, 3.6, 1.5, j.acento, sx, 0.6, 0, { r: 0.02, padre: g, sombra: false })); // franjas de color a los lados
+  caja(2.1, 1.7, 0.12, 0x050807, 0, 2.15, 0.82, { r: 0.04, padre: g });                     // marco de pantalla
+  const pant = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.42), new THREE.MeshBasicMaterial({ map: texturaPantallaJuego(j), toneMapped: false }));
+  pant.position.set(0, 3.0, 0.9); pant.rotation.x = -0.12; g.add(pant);
+  const titulo = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.55), new THREE.MeshBasicMaterial({ map: pastilla(j.nombre.toUpperCase(), { ancho: 560, alto: 130, fondo: '#0b1210', color: j.colorCss, borde: j.colorCss, fuente: '700 50px "Roboto Mono", monospace' }), toneMapped: false, transparent: true }));
+  titulo.position.set(0, 4.25, 0.87); g.add(titulo);
+  const tablero = caja(2.4, 0.22, 1.0, 0x111816, 0, 1.95, 1.15, { r: 0.05, padre: g }); tablero.rotation.x = 0.25;
+  cilindro(0.05, 0.05, 0.35, 0x222222, -0.55, 2.05, 1.15, { padre: g });
+  const bola = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 8), mate(0xff5a52)); bola.position.set(-0.55, 2.45, 1.15); g.add(bola);
+  [[0.2, MARCA.lima], [0.55, MARCA.turquesa], [0.9, 0xff5a52]].forEach(([bx, col]) => cilindro(0.1, 0.1, 0.08, col, bx, 2.12, 1.1, { padre: g, sombra: false }));
+  sombraSuave(mx, mz + 0.4, 3.6, 3.0);
+  SALA.objetos.push({ id: j.id, nombre: j.nombre, icono: j.icono, zona: { x: mx, z: mz + 2.5 },
+    sub: () => esc(j.descripcion + ' · Récord: ' + ARCADE.record(j.id)),
+    acciones: [{ b: 'A', t: 'Jugar', f: () => abrirJuego(j.id) }] });
+  SALA.cajas.push({ x0: mx - 1.3, x1: mx + 1.3, z0: mz - 0.9, z1: mz + 1.7 });
+}
+function construirSala() {
+  const anterior = escena;
+  const esc3 = new THREE.Scene();
+  escena = esc3;
+  SALA.cajas = [];
+  escena.add(new THREE.HemisphereLight(0xdff7ff, 0x1d2b28, 0.55));
+  crearSol(escena, 0xfff0d8, 0.75, 0, 0, 24);
+  const rel = new THREE.DirectionalLight(0xb8f7e0, 0.25); rel.position.set(-18, 14, 16); escena.add(rel);
+  const AV = SXV1 - SX0, FV = SZV1 - SZ0, ALTO = 30;
+  const tp = texturaPisoArcade(); tp.repeat.set(AV / 4, FV / 4);
+  const piso = new THREE.Mesh(new THREE.BoxGeometry(AV, 0.2, FV), material({ map: tp }));
+  piso.position.set((SX0 + SXV1) / 2, -0.1, (SZ0 + SZV1) / 2); piso.receiveShadow = true; escena.add(piso);
+  // Muros oscuros con franjas de neón
+  caja(AV, ALTO, 0.6, 0x1f4d43, (SX0 + SXV1) / 2, 0, SZ0 + 0.3, { r: 0.04 });
+  caja(0.6, ALTO, FV - 0.6, 0x1a443b, SX0 + 0.3, 0, (SZ0 + 0.6 + SZV1) / 2, { r: 0.04 });
+  const neon = (w, d, x, y, z, col) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.12, d), new THREE.MeshBasicMaterial({ color: lin(col), toneMapped: false })); m.position.set(x, y, z); escena.add(m); };
+  neon(AV - 0.6, 0.06, (SX0 + 0.6 + SXV1) / 2, 6.2, SZ0 + 0.63, MARCA.lima);
+  neon(AV - 0.6, 0.06, (SX0 + 0.6 + SXV1) / 2, 0.4, SZ0 + 0.63, MARCA.turquesa);
+  neon(0.06, FV - 1.2, SX0 + 0.63, 6.2, (SZ0 + 1.2 + SZV1) / 2, MARCA.lima);
+  neon(0.06, FV - 1.2, SX0 + 0.63, 0.4, (SZ0 + 1.2 + SZV1) / 2, MARCA.turquesa);
+  // Letrero de neón
+  const letrero = new THREE.Mesh(new THREE.PlaneGeometry(10, 1.6), new THREE.MeshBasicMaterial({ map: pastilla('EDITABLE · GAMING ROOM', { ancho: 1400, alto: 220, fondo: '#08130f', color: '#dafc92', borde: '#89c9c9', fuente: '700 92px "Roboto Mono", monospace' }), toneMapped: false, transparent: true }));
+  letrero.position.set(0, 7.3, SZ0 + 0.66); escena.add(letrero);
+  // Máquinas arcade a lo largo del muro del fondo
+  const n = ARCADE.juegos.length, sep = 4.6;
+  ARCADE.juegos.forEach((j, i) => construirMaquina(j, (i - (n - 1) / 2) * sep, SZ0 + 1.6));
+  // Puerta de salida en el muro izquierdo
+  const pz = 1.5;
+  caja(0.2, 4.8, 3.2, MARCA.verde, SX0 + 0.68, 0, pz, { r: 0.06 });
+  const hoja = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 4.25), new THREE.MeshBasicMaterial({ map: pastilla('SALIDA ▶ OFICINA', { ancho: 420, alto: 690, fondo: '#0b1210', color: '#89c9c9', borde: '#dafc92', fuente: '700 40px "Roboto Mono", monospace', radio: 20 }), toneMapped: false }));
+  hoja.rotation.y = Math.PI / 2; hoja.position.set(SX0 + 0.8, 2.15, pz); escena.add(hoja);
+  caja(1.6, 0.04, 3.0, MARCA.turquesa, SX0 + 1.5, 0, pz, { r: 0.02, sombra: false });
+  SALA.objetos.push({ id: 'salida', nombre: 'Volver a la oficina', icono: '🚪', zona: { x: SX0 + 2.4, z: pz },
+    sub: () => 'La oficina te espera tal como la dejaste.', acciones: [{ b: 'A', t: 'Salir', f: () => irA('oficina') }] });
+  SALA.llegada = { x: SX0 + 2.6, z: pz + 0.4, rot: Math.PI / 2 };
+  // Zona de descanso: sofá, puffs y mesa
+  caja(6, 1.0, 2.0, 0x12423a, -5.5, 0, 6.6, { r: 0.35 }); caja(6, 1.6, 0.6, 0x12423a, -5.5, 0.6, 7.5, { r: 0.28 });
+  [[1.5, MARCA.lima], [4.0, MARCA.turquesa], [6.5, 0xff5a52]].forEach(([x, col]) => { const p = new THREE.Mesh(new THREE.SphereGeometry(0.85, 18, 12), mate(col)); p.scale.set(1, 0.65, 1); p.position.set(x, 0.55, 5.6); p.castShadow = true; p.receiveShadow = true; escena.add(p); });
+  cilindro(1.1, 1.1, 0.12, C.madera, -5.5, 0.9, 4.0, {}); cilindro(0.1, 0.1, 0.9, C.pata, -5.5, 0, 4.0, {});
+  SALA.cajas.push({ x0: -8.8, x1: -2.2, z0: 5.4, z1: 9.5 }, { x0: -6.8, x1: -4.2, z0: 2.7, z1: 5.3 }, { x0: 0.5, x1: 7.5, z0: 4.7, z1: 6.5 });
+  // Baranda de neón que marca hasta dónde se camina
+  caja(0.5, 1.0, SZ1 - SZ0 + 0.5, 0x0d2621, SX1 + 0.4, 0, (SZ0 + SZ1) / 2 + 0.2, { r: 0.08 });
+  caja(SX1 - SX0 + 0.4, 1.0, 0.5, 0x0d2621, (SX0 + SX1) / 2 + 0.2, 0, SZ1 + 0.4, { r: 0.08 });
+  neon(0.52, 0.06, SX1 + 0.4, 1.02, (SZ0 + SZ1) / 2 + 0.2, MARCA.lima);
+  neon(SX1 - SX0 + 0.4, 0.06, (SX0 + SX1) / 2 + 0.2, 1.02, SZ1 + 0.4, MARCA.lima);
+  decorarAlrededor({ x0: SX0, z0: SZ0, xj: SX1, zj: SZ1, xv: SXV1, zv: SZV1 }, 'sala');
+  fusionarEstaticos(escena);
+  LUGARES.sala = { escena: esc3, x0: SX0, x1: SXV1, z0: SZ0, z1: SZV1, muroX: SX0 + 0.6, muroZ: SZ0 + 0.6, alto: ALTO, cx: (SX0 + SX1) / 2, cz: (SZ0 + SZ1) / 2, jx1: SX1, jz1: SZ1 };
+  escena = anterior;
+}
+function colisionaSala(x, z) {
+  if (x < SX0 + 1.2 || x > SX1 - 0.4 || z < SZ0 + 1.2 || z > SZ1 - 0.4) return true;
+  return SALA.cajas.some(c => x > c.x0 - 0.45 && x < c.x1 + 0.45 && z > c.z0 - 0.45 && z < c.z1 + 0.45);
+}
+function abrirJuego(id) {
+  sonar('abrir');
+  mostrarPantalla('juego');
+  if (!document.fullscreenElement) { const d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen; if (f) try { f.call(d).catch(() => {}); } catch (e) {} }
+  ARCADE.abrir(id, { lienzo: $('#arcade-lienzo'), alSalir: () => { mostrarPantalla('oficina'); estacionCerca = null; pintarPrompt(); }, sonar: sonar });
+}
+
+// ============================================================
+//  PIZARRA: FAVORITAS + CALENDARIO DE EFEMÉRIDES
+// ============================================================
+const PIZ = { tab: 'favoritas', cartas: [], i: 0, remoto: false, mes: null, ocupado: false };
+function favoritasLocales() { return leer('favoritas', []); }
+function guardarFavoritaLocal(tipo, carta) {
+  const lista = favoritasLocales().filter(c => !(c.tipo === tipo && c.id === carta.id));
+  lista.unshift(Object.assign({}, carta, { tipo: tipo, guardada: Date.now() }));
+  guardar('favoritas', lista.slice(0, 200));
+}
+function quitarFavoritaLocal(tipo, id) { guardar('favoritas', favoritasLocales().filter(c => !(c.tipo === tipo && c.id === id))); }
+async function cargarFavoritas() {
+  // Si tu hoja ya tiene la opción "favoritas", las trae de ahí (se ven en cualquier equipo);
+  // si no, usa las que guardó este equipo.
+  try {
+    const r = await api({ accion: 'favoritas' });
+    PIZ.remoto = true;
+    return (r.cartas || []).map(c => Object.assign({ tipo: c.tipo || 'noticias' }, c));
+  } catch (err) {
+    if (/desconocida/i.test(err.message)) { PIZ.remoto = false; return favoritasLocales(); }
+    throw err;
+  }
+}
+async function abrirPizarra(tab) {
+  PIZ.tab = tab; PIZ.i = 0; PIZ.mes = new Date(); PIZ.mes.setDate(1);
+  mostrarPantalla('pizarra'); sonar('abrir');
+  pintarPizarra();
+  if (tab === 'favoritas') await recargarFavoritas();
+}
+async function recargarFavoritas() {
+  $('#pizarra-contenido').innerHTML = '<div class="vacio"><div>⏳</div></div>';
+  try { PIZ.cartas = await cargarFavoritas(); }
+  catch (err) { avisar(err.message, true); manejarPinMalo(err); PIZ.cartas = favoritasLocales(); }
+  if (PIZ.i >= PIZ.cartas.length) PIZ.i = 0;
+  pintarPizarra();
+}
+function cerrarPizarra() { mostrarPantalla('oficina'); pintarPrompt(); refrescarEstado(); }
+function pintarPizarra() {
+  $('#tab-favoritas').classList.toggle('activa', PIZ.tab === 'favoritas');
+  $('#tab-calendario').classList.toggle('activa', PIZ.tab === 'calendario');
+  const el = $('#pizarra-contenido');
+  if (PIZ.tab === 'favoritas') {
+    $('#pizarra-contador').textContent = PIZ.cartas.length ? (PIZ.i + 1) + ' de ' + PIZ.cartas.length : '0 de 0';
+    $('#pizarra-pie').innerHTML = [['A', 'Al Creativo'], ['B', 'Quitar'], ['X', 'Ver fuente'], ['FLECHAS', 'Otra'], ['R', 'Calendario'], ['MENOS', 'Cerrar']].map(x => boton(x[0], x[1])).join('');
+    const c = PIZ.cartas[PIZ.i];
+    if (!c) { el.innerHTML = '<div class="vacio"><div><div>⭐</div><p>Aún no hay favoritas.</p><p style="font-size:16px">En la mesa de noticias o en la pizarra de tendencias, presiona A (Me gusta) y aparecerán aquí.</p></div></div>'; return; }
+    const bl = (t, x, cl) => x ? '<div class="bloque ' + (cl || '') + '"><h4>' + t + '</h4><p>' + esc(x) + '</p></div>' : '';
+    const esTend = c.tipo === 'tendencias';
+    el.innerHTML = '<div class="etiquetas"><span class="etiqueta formato">' + (esTend ? '🔥 Tendencia' : '📰 Noticia') + '</span>' +
+      (c.puntaje ? '<span class="etiqueta puntaje">' + esc(c.puntaje) + ' pts</span>' : '') +
+      (c.red ? '<span class="etiqueta">' + esc(c.red) + '</span>' : '') + (c.fuente ? '<span class="etiqueta">' + esc(c.fuente) + '</span>' : '') +
+      (!PIZ.remoto ? '<span class="etiqueta" title="Guardada en este equipo">📱 este equipo</span>' : '') + '</div>' +
+      '<div class="carta-titulo">' + esc(c.titulo) + '</div>' +
+      (esTend ? bl('Qué es', c.queEs) + bl('Cómo usarla en Editable', c.comoUsarla) + bl('Por qué funciona', c.porQue)
+              : bl('Ángulo para Editable', c.angulo) + bl('Por qué', c.porque) + bl('Resumen', c.resumen));
+    el.scrollTop = 0;
+  } else {
+    const m = PIZ.mes, hoy = new Date();
+    $('#pizarra-contador').textContent = EFEMERIDES.nombreMes(m) + ' ' + m.getFullYear();
+    $('#pizarra-pie').innerHTML = [['FLECHAS', 'Cambiar mes'], ['Y', 'Este mes'], ['L', 'Favoritas'], ['MENOS', 'Cerrar']].map(x => boton(x[0], x[1])).join('');
+    const lista = EFEMERIDES.delMes(m.getFullYear(), m.getMonth());
+    const fila = e => {
+      const dif = Math.round((new Date(e.fecha.getFullYear(), e.fecha.getMonth(), e.fecha.getDate()) - new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())) / 864e5);
+      const cl = dif === 0 ? 'hoy' : dif < 0 ? 'pasada' : dif <= 14 ? 'pronto' : '';
+      return '<div class="efe ' + cl + '"><div class="efe-dia">' + e.fecha.getDate() + '<small>' + EFEMERIDES.diaCorto(e.fecha) + '</small></div><div><div class="efe-nombre">' + esc(e.nombre) +
+        (dif === 0 ? ' · HOY' : dif > 0 && dif <= 14 ? ' · en ' + dif + (dif === 1 ? ' día' : ' días') : '') + '</div>' + (e.idea ? '<div class="efe-idea">💡 ' + esc(e.idea) + '</div>' : '') + '</div></div>';
+    };
+    const col = (titulo, xs) => '<div class="cal-col"><h4>' + titulo + '</h4>' + (xs.length ? xs.map(fila).join('') : '<div class="efe-vacio">Nada marcado este mes.</div>') + '</div>';
+    el.innerHTML = '<div class="cal-mes"><h3>' + EFEMERIDES.nombreMes(m) + ' ' + m.getFullYear() + '</h3><span>◀ ▶ para cambiar de mes</span></div>' +
+      '<div class="cal-columnas">' + col('🇩🇴 Locales · República Dominicana', lista.filter(e => e.ambito === 'local')) + col('🌎 Internacionales · marketing, redes, diseño e IA', lista.filter(e => e.ambito !== 'local')) + '</div>';
+    el.scrollTop = 0;
+  }
+}
+function manejarPizarra(a) {
+  if (PIZ.ocupado) return;
+  if (a === 'MENOS' || a === 'MAS') return cerrarPizarra();
+  if (a === 'L' && PIZ.tab !== 'favoritas') { PIZ.tab = 'favoritas'; sonar('click'); pintarPizarra(); recargarFavoritas(); return; }
+  if (a === 'R' && PIZ.tab !== 'calendario') { PIZ.tab = 'calendario'; sonar('click'); return pintarPizarra(); }
+  if (a === 'ARRIBA') { $('#pizarra-contenido').scrollTop -= 140; return; }
+  if (a === 'ABAJO') { $('#pizarra-contenido').scrollTop += 140; return; }
+  if (PIZ.tab === 'calendario') {
+    if (a === 'IZQ' || a === 'DER') { PIZ.mes.setMonth(PIZ.mes.getMonth() + (a === 'DER' ? 1 : -1)); sonar('click'); return pintarPizarra(); }
+    if (a === 'Y') { PIZ.mes = new Date(); PIZ.mes.setDate(1); sonar('click'); return pintarPizarra(); }
+    if (a === 'B') return cerrarPizarra();
+    return;
+  }
+  const n = PIZ.cartas.length, c = PIZ.cartas[PIZ.i];
+  if (a === 'DER' && n) { PIZ.i = (PIZ.i + 1) % n; sonar('click'); return pintarPizarra(); }
+  if (a === 'IZQ' && n) { PIZ.i = (PIZ.i - 1 + n) % n; sonar('click'); return pintarPizarra(); }
+  if (!c) { if (a === 'B' || a === 'A') cerrarPizarra(); return; }
+  if (a === 'X') { const enlace = c.enlace || (c.evidencia && c.evidencia[0]); if (enlace) window.open(enlace, '_blank', 'noopener'); else avisar('Esta favorita no tiene enlace.'); return; }
+  if (a === 'A') return favoritaAlCreativo(c);
+  if (a === 'B') return quitarFavorita(c);
+}
+async function favoritaAlCreativo(c) {
+  PIZ.ocupado = true; sonar('creativo');
+  try {
+    const r = await api({ accion: 'decidir', tipo: c.tipo, id: c.id, decision: 'creativo' });
+    quitarFavoritaLocal(c.tipo, c.id);
+    PIZ.cartas.splice(PIZ.i, 1); if (PIZ.i >= PIZ.cartas.length) PIZ.i = 0;
+    avisar('✍️ Enviada al Creativo. La convertirá en pieza.');
+    xpFlotante(r.xpGanada); if (r.jugador) pintarJugador(r.jugador); if (r.subioNivel) subioNivel(r.jugador);
+  } catch (err) { sonar('error'); avisar(err.message, true); manejarPinMalo(err); }
+  PIZ.ocupado = false; pintarPizarra();
+}
+async function quitarFavorita(c) {
+  PIZ.ocupado = true; sonar('no');
+  try {
+    if (PIZ.remoto) await api({ accion: 'quitarFavorita', tipo: c.tipo, id: c.id });
+    quitarFavoritaLocal(c.tipo, c.id);
+    PIZ.cartas.splice(PIZ.i, 1); if (PIZ.i >= PIZ.cartas.length) PIZ.i = 0;
+    avisar('Quitada de favoritas.');
+  } catch (err) { sonar('error'); avisar(err.message, true); }
+  PIZ.ocupado = false; pintarPizarra();
 }
 
 // ============================================================
@@ -1299,7 +1927,11 @@ document.querySelectorAll('.logo-texto').forEach(el => el.innerHTML = svgColor(S
 construirOficina();
 ESTACIONES.forEach(construirEstacion);
 construirJugador();
+fusionarEstaticos(escenaOficina);          // muebles fijos → pocas piezas grandes
+renderer.shadowMap.needsUpdate = true;     // sombras fijas: se calculan una sola vez
 aplicarCalidad();
+zoom = 99; recalcularZoom();               // arranca con la vista más abierta posible dentro de la oficina
+window.__info = () => ({ llamadas: renderer.info.render.calls, triangulos: renderer.info.render.triangles, zoom: zoom, zoomMax: zoomMax, calidad: calidad, lugar: lugar });
 bucle();
 if (DEMO) $('#demo').classList.remove('oculto');
 // Permite instalar el juego como app (pantalla completa en la Switch)
