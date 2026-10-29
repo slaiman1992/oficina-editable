@@ -46,6 +46,7 @@ body::before { content: ''; position: fixed; inset: 0; pointer-events: none;
 .chip b { font: 700 17px 'Roboto Mono'; }
 #conexion { width: 10px; height: 10px; border-radius: 50%; background: #9fb0ac; box-shadow: 0 0 0 3px rgba(2,38,30,.08); }
 #conexion.ok { background: #46c17a; } #conexion.mal { background: var(--rojo); }
+#musica-txt { max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 600 12.5px 'Poppins'; }
 #demo { background: var(--lima); color: var(--verde); font: 700 12px 'Roboto Mono'; padding: 6px 10px; border-radius: 10px; letter-spacing: 1px; box-shadow: var(--sombra); }
 
 /* ---------- Estación cercana ---------- */
@@ -198,6 +199,7 @@ body.liviano .aviso-toast { box-shadow: none; }
     <div class="ficha chip" title="Noticias por decidir">📰 <b id="c-noticias">0</b></div>
     <div class="ficha chip" title="Tendencias por decidir">🔥 <b id="c-tendencias">0</b></div>
     <div class="ficha chip" title="Piezas por revisar">✍️ <b id="c-piezas">0</b></div>
+    <div class="ficha chip oculto" id="musica-chip" title="Música">🎵 <span id="musica-txt"></span></div>
     <div class="ficha chip accion" data-accion="MAS"><span class="btn MAS">+</span>Menú <span id="conexion"></span></div>
   </div>
 </div>
@@ -283,6 +285,7 @@ body.liviano .aviso-toast { box-shadow: none; }
 <script src="config.js"></script>
 <script src="efemerides.js"></script>
 <script src="arcade.js"></script>
+<script src="musica.js"></script>
 <script>
 'use strict';
 // Si config.js no existe o no tiene la dirección, el juego abre en MODO DEMO con datos de ejemplo.
@@ -641,6 +644,7 @@ const OPCIONES_MENU = () => [
   { t: '▶ Continuar', f: () => mostrarPantalla('oficina') },
   { t: '🎮 Configurar controles', f: iniciarCalibracion },
   { t: '🖥 Pantalla completa', f: pantallaCompleta },
+  { t: '🎵 Música: ' + (MUSICA.sonando ? 'Encendida' : 'Apagada'), f: () => { MUSICA.alternar(estiloDelLugar()); setTimeout(pintarMenu, 50); } },
   { t: '✨ Calidad gráfica: ' + NOMBRE_CALIDAD[calidad], f: cambiarCalidad },
   { t: '🔄 Actualizar la oficina', f: () => { refrescarEstado(); mostrarPantalla('oficina'); avisar('Actualizando…'); } },
   { t: '🔑 Cerrar sesión (olvidar PIN)', f: () => { pin = ''; guardar('pin', ''); if (DEMO) { avisar('En modo demo no hay PIN.'); return; } mostrarPantalla('pin'); pintarPin(); } }
@@ -906,6 +910,7 @@ function construirOficina() {
   construirJardinera();
   construirPuertaArcade();
   construirPizarra();
+  construirTocadiscos();
   // Ventanales en el muro izquierdo (luz turquesa suave), también a lo largo de la oficina extendida
   [-6.5, 3.5, 22, 34, 46].forEach(z => {
     caja(0.12, 3.4, 5.2, MARCA.verde, X0 + 0.62, 1.4, z, { r: 0.05, sombra: false });
@@ -1017,6 +1022,27 @@ function construirPuertaArcade() {
   const letrero = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.8), new THREE.MeshBasicMaterial({ map: pastilla('▶ GAMING ROOM', { ancho: 640, alto: 140, fondo: '#0b1210', color: '#dafc92', borde: '#89c9c9', fuente: '700 58px "Roboto Mono", monospace' }), toneMapped: false, transparent: true }));
   letrero.position.set(x, 5.5, z + 0.12); escena.add(letrero);
   caja(3.0, 0.04, 1.6, MARCA.lima, x, 0, z + 1.2, { r: 0.02, sombra: false }); // tapete
+}
+
+// ---------- Tocadiscos (oficina) ----------
+const TOCADISCOS = { x: 9.5, z: 12.5, disco: null };
+function construirTocadiscos() {
+  const g = new THREE.Group(); g.position.set(TOCADISCOS.x, 0, TOCADISCOS.z); g.rotation.y = Math.PI / 4; escena.add(g);
+  caja(3.4, 1.6, 1.4, C.madera, 0, 0, 0, { r: 0.08, padre: g });                       // consola
+  caja(3.42, 0.24, 1.42, MARCA.verde, 0, 0.25, 0, { r: 0.05, padre: g, sombra: false });
+  caja(1.7, 0.16, 1.25, 0x1b1f1e, -0.55, 1.6, 0, { r: 0.04, padre: g });               // base del plato
+  const giro = new THREE.Group(); giro.position.set(-0.55, 1.78, 0); giro.userData.dinamico = true; g.add(giro);
+  cilindro(0.52, 0.52, 0.04, 0x111111, 0, 0, 0, { padre: giro });                      // disco
+  cilindro(0.17, 0.17, 0.045, MARCA.lima, 0, 0.002, 0, { padre: giro, sombra: false }); // etiqueta
+  caja(0.08, 0.05, 0.14, MARCA.verde, 0.3, 0.03, 0, { r: 0.01, padre: giro, sombra: false }); // marca para ver que gira
+  TOCADISCOS.disco = giro;
+  const brazo = caja(0.07, 0.07, 0.9, 0xdcdcdc, 0.12, 1.8, 0.1, { r: 0.02, padre: g }); brazo.rotation.y = 0.35;
+  [[0.65, MARCA.lima], [0.95, MARCA.turquesa], [1.25, 0xf2f7f9]].forEach(([dx, col]) => cilindro(0.08, 0.08, 0.07, col, dx, 1.6, 0.3, { padre: g, sombra: false })); // perillas
+  [-2.35, 2.35].forEach(dx => {                                                           // bocinas
+    caja(1.0, 2.4, 1.0, 0x1b2422, dx, 0, 0, { r: 0.1, padre: g });
+    [[1.65, 0.34], [0.75, 0.22]].forEach(([y, r]) => { const c = cilindro(r, r, 0.08, MARCA.lima, dx, y, 0.5, { padre: g, sombra: false }); c.rotation.x = Math.PI / 2; c.position.y = y; });
+  });
+  sombraSuave(TOCADISCOS.x, TOCADISCOS.z, 6.5, 4.5);
 }
 
 // ---------- Pizarra del equipo (en el muro izquierdo) ----------
@@ -1236,6 +1262,7 @@ function colisionaOficina(x, z) {
   if (x > 13.0 && x < 15.9 && z > -1.0 && z < 6.0) return true;         // barra de café
   if (x < -5.6 && z > 7.9 && z < 11.1) return true;                     // sofá
   if (Math.hypot(x + 10, z - 5.6) < 2.0) return true;                   // mesa de centro
+  if (Math.hypot(x - TOCADISCOS.x, z - TOCADISCOS.z) < 2.3) return true; // tocadiscos
   return ESTACIONES.some(e => e.cajas.some(c => x > c.x0 - 0.45 && x < c.x1 + 0.45 && z > c.z0 - 0.45 && z < c.z1 + 0.45));
 }
 
@@ -1374,6 +1401,12 @@ function bucle() {
     else setLin(o.pantalla.material.color, est === 'Error' ? 0xff8f88 : est === 'Inactivo' ? 0x3b4a47 : 0xcfeeee);
     o.alerta.visible = est === 'Error' && Math.sin(t * 5) > -0.3;
   });
+
+  // El disco y el ecualizador se mueven cuando suena la música
+  if (MUSICA.sonando) {
+    if (lugar === 'oficina' && TOCADISCOS.disco) TOCADISCOS.disco.rotation.y -= dt * 3.4;
+    if (lugar === 'sala' && SALA.barras) SALA.barras.forEach((b, i) => { b.scale.y = 0.25 + Math.abs(Math.sin(t * (3 + i * 0.7) + i * 1.3)) * (0.75 + 0.25 * Math.sin(t * 9 + i)); });
+  }
 
   // Lo más cercano con lo que puedes interactuar
   let cerca = null, dmin = 2.8;
@@ -1588,8 +1621,31 @@ const OBJ_PIZARRA = { id: 'pizarra', nombre: 'Pizarra del equipo', icono: '📌'
     return esc(favoritasLocales().length + ' favoritas guardadas' + (p ? ' · Próxima efeméride: ' + p.nombre + ' (' + p.fecha.getDate() + ' ' + EFEMERIDES.mesCorto(p.fecha) + ')' : ''));
   },
   acciones: [{ b: 'A', t: 'Favoritas', f: () => abrirPizarra('favoritas') }, { b: 'X', t: 'Calendario', f: () => abrirPizarra('calendario') }] };
+// Tocadiscos (oficina) y sistema de sonido retro (Gaming Room): misma lógica, distinto estilo
+const estiloDelLugar = () => lugar === 'sala' ? 'synthwave' : 'enfoque';
+const NIVEL_VOL = v => v <= 0.35 ? 'bajo' : v >= 1 ? 'alto' : 'medio';
+function objetoMusica(id, nombre, icono, zona, estilo, descripcion) {
+  return { id, nombre, icono, zona,
+    sub: () => esc(MUSICA.sonando && MUSICA.estilo === estilo ? '♪ ' + MUSICA.pista + ' · volumen ' + NIVEL_VOL(MUSICA.volumen) : descripcion),
+    get acciones() {
+      return [
+        { b: 'A', t: MUSICA.sonando ? 'Pausar' : 'Poner música', f: () => MUSICA.alternar(estilo) },
+        { b: 'X', t: 'Otra pista', f: () => MUSICA.siguiente(estilo) },
+        { b: 'Y', t: 'Volumen', f: () => { const v = MUSICA.cambiarVolumen(); avisar('🔊 Volumen ' + NIVEL_VOL(v)); } }
+      ];
+    } };
+}
+const OBJ_TOCADISCOS = objetoMusica('tocadiscos', 'Tocadiscos', '🎶', { x: TOCADISCOS.x + 1.6, z: TOCADISCOS.z + 1.6 }, 'enfoque', 'Electrónica ambiental de enfoque, compuesta en vivo por el juego (sin derechos).');
+function pintarMusica() {
+  const chip = $('#musica-chip');
+  chip.classList.toggle('oculto', !MUSICA.sonando);
+  $('#musica-txt').textContent = MUSICA.pista ? MUSICA.pista.split(' · ')[0] : '';
+  if (estacionCerca && (estacionCerca.id === 'tocadiscos' || estacionCerca.id === 'sonido')) pintarPrompt();
+}
+MUSICA.alCambiar = pintarMusica;
+MUSICA.aviso = avisar;
 function interactivos() {
-  return lugar === 'sala' ? SALA.objetos : ESTACIONES.concat([OBJ_PIZARRA, OBJ_PUERTA]);
+  return lugar === 'sala' ? SALA.objetos : ESTACIONES.concat([OBJ_PIZARRA, OBJ_PUERTA, OBJ_TOCADISCOS]);
 }
 
 // ============================================================
@@ -1645,6 +1701,7 @@ function irA(destino) {
     if (destino === 'sala' && !LUGARES.sala) construirSala();
     lugar = destino;
     escena = LUGARES[destino].escena;
+    MUSICA.lugar(estiloDelLugar());
     escena.add(jugadorFig); escena.add(sombraJugador); // tú te mudas de escena
     const llegada = destino === 'sala' ? SALA.llegada : { x: OBJ_PUERTA.zona.x, z: OBJ_PUERTA.zona.z + 0.4, rot: 0 };
     yo.x = llegada.x; yo.z = llegada.z; yo.rot = llegada.rot; yo.vel = 0;
@@ -1735,6 +1792,24 @@ function construirSala() {
   SALA.objetos.push({ id: 'salida', nombre: 'Volver a la oficina', icono: '🚪', zona: { x: SX0 + 2.4, z: pz },
     sub: () => 'La oficina te espera tal como la dejaste.', acciones: [{ b: 'A', t: 'Salir', f: () => irA('oficina') }] });
   SALA.llegada = { x: SX0 + 2.6, z: pz + 0.4, rot: Math.PI / 2 };
+  // Sistema de sonido retro: bocinas grandes, amplificadores y ecualizador que baila con la música
+  const sx = 8.6, sz = 1.0;
+  [-1.75, 1.75].forEach(dx => {
+    caja(1.3, 3.0, 1.1, 0x111514, sx + dx, 0, sz, { r: 0.1 });
+    [[2.25, 0.42], [1.05, 0.3]].forEach(([y, r]) => { const c = cilindro(r, r, 0.08, MARCA.lima, sx + dx, y, sz + 0.56, {}); c.rotation.x = Math.PI / 2; c.position.y = y; });
+  });
+  [[0, 0x1c1f1e, MARCA.turquesa], [0.72, 0x161918, 0xff5a52], [1.44, 0x1c1f1e, MARCA.lima]].forEach(([y, col, luz]) => {
+    caja(2.0, 0.66, 1.0, col, sx, y, sz, { r: 0.06 });
+    const l = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 0.02), new THREE.MeshBasicMaterial({ color: lin(luz), toneMapped: false })); l.position.set(sx, y + 0.5, sz + 0.51); escena.add(l);
+  });
+  SALA.barras = [];
+  const colsEq = [MARCA.lima, MARCA.lima, MARCA.turquesa, MARCA.turquesa, 0xf5b84a, 0xf5b84a, 0xff5a52, 0xff5a52];
+  colsEq.forEach((col, i) => {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.6, 0.06), new THREE.MeshBasicMaterial({ color: lin(col), toneMapped: false }));
+    b.geometry.translate(0, 0.3, 0); b.position.set(sx - 0.7 + i * 0.2, 2.18, sz + 0.52); b.scale.y = 0.3; b.userData.dinamico = true; escena.add(b); SALA.barras.push(b);
+  });
+  SALA.objetos.push(objetoMusica('sonido', 'Sistema de sonido retro', '📼', { x: sx, z: sz + 2.2 }, 'synthwave', 'Synthwave estilo 80s, compuesto en vivo por el juego (sin derechos).'));
+  SALA.cajas.push({ x0: sx - 2.5, x1: sx + 2.5, z0: sz - 0.6, z1: sz + 0.6 });
   // Zona de descanso: sofá, puffs y mesa
   caja(6, 1.0, 2.0, 0x12423a, -5.5, 0, 6.6, { r: 0.35 }); caja(6, 1.6, 0.6, 0x12423a, -5.5, 0.6, 7.5, { r: 0.28 });
   [[1.5, MARCA.lima], [4.0, MARCA.turquesa], [6.5, 0xff5a52]].forEach(([x, col]) => { const p = new THREE.Mesh(new THREE.SphereGeometry(0.85, 18, 12), mate(col)); p.scale.set(1, 0.65, 1); p.position.set(x, 0.55, 5.6); p.castShadow = true; p.receiveShadow = true; escena.add(p); });
@@ -1758,7 +1833,8 @@ function abrirJuego(id) {
   sonar('abrir');
   mostrarPantalla('juego');
   if (!document.fullscreenElement) { const d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen; if (f) try { f.call(d).catch(() => {}); } catch (e) {} }
-  ARCADE.abrir(id, { lienzo: $('#arcade-lienzo'), alSalir: () => { mostrarPantalla('oficina'); estacionCerca = null; pintarPrompt(); }, sonar: sonar });
+  MUSICA.atenuar(true); // la música baja mientras juegas
+  ARCADE.abrir(id, { lienzo: $('#arcade-lienzo'), alSalir: () => { MUSICA.atenuar(false); mostrarPantalla('oficina'); estacionCerca = null; pintarPrompt(); }, sonar: sonar });
 }
 
 // ============================================================
@@ -1912,8 +1988,10 @@ function manejarPinMalo(err) {
   if (err && err.pinMalo) { pin = ''; guardar('pin', ''); pinTemp = ''; mostrarPantalla('pin'); pintarPin(); $('#pin-error').textContent = 'Tu PIN cambió o no es válido. Escríbelo de nuevo.'; }
 }
 
+let musicaRetomada = false;
 function entrarOficina() {
   mostrarPantalla('oficina');
+  if (!musicaRetomada && MUSICA.quiereSonar() && !MUSICA.sonando) { musicaRetomada = true; MUSICA.reproducir(estiloDelLugar()); }
   refrescarEstado();
   pintarPrompt();
 }
