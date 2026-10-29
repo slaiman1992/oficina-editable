@@ -430,6 +430,17 @@ async function api(params) {
   return j;
 }
 function marcarConexion(ok) { const c = $('#conexion'); c.classList.toggle('ok', ok); c.classList.toggle('mal', !ok); }
+// Envíos grandes (artes finales): van por POST como texto simple
+async function apiPost(datos) {
+  if (DEMO) { await new Promise(r => setTimeout(r, 300)); return { ok: true }; }
+  let r;
+  try { r = await fetch(API_URL, { method: 'POST', redirect: 'follow', body: JSON.stringify(Object.assign({}, datos, { pin: pin })) }); }
+  catch (e) { marcarConexion(false); throw new Error('Sin conexión con la oficina. Revisa el Wi-Fi.'); }
+  let j;
+  try { j = await r.json(); } catch (e) { throw new Error('La oficina no pudo guardar el arte final. ¿Publicaste la nueva versión del código?'); }
+  if (!j.ok) { const err = new Error(j.error || 'Error de la oficina.'); err.pinMalo = j.pinMalo; throw err; }
+  return j;
+}
 
 // ---- Datos de ejemplo para el modo demo ----
 const demo = {
@@ -460,7 +471,8 @@ demo.disenos = [
     nota: 'Fondo verde oscuro y titular en lima. Sin logo: es una pieza de consejo.', gancho: 'El Black Friday no se improvisa.', copy: 'Texto de ejemplo para el copy…', hashtags: '#MarketingDigitalRD #NegociosRD', cta: 'Agenda tu plan' },
   { id: 'dd2', idPieza: 'p00', tema: 'EJEMPLO · Errores al compartir el WhatsApp del negocio', formato: 'Carrusel', laminas: 3, version: 2, estado: 'Listo', creditos: 720, imagenes: 3, enlaces: ['https://www.magnific.com', 'https://www.magnific.com', 'https://www.magnific.com'],
     comentario: 'Más simple, con menos elementos', nota: 'Portada con el gancho, interiores numeradas y cierre con logo.',
-    versiones: [{ version: 1, imagenes: 3, enlaces: ['https://www.magnific.com'], nota: 'Primera versión de ejemplo, con más elementos.', comentario: '' }], gancho: '¿Tu equipo usa el mismo WhatsApp y se pierden ventas?', copy: 'Texto de ejemplo…', hashtags: '#WhatsAppBusiness #VentasRD', cta: 'Escríbenos al DM' },
+    logos: ['isotipo|arriba-derecha|verde', '-', 'horizontal|abajo-centro|verde'],
+    versiones: [{ version: 1, imagenes: 3, enlaces: ['https://www.magnific.com'], nota: 'Primera versión de ejemplo, con más elementos.', comentario: '', logos: ['-', '-', 'isotipo|abajo-centro|verde'] }], gancho: '¿Tu equipo usa el mismo WhatsApp y se pierden ventas?', copy: 'Texto de ejemplo…', hashtags: '#WhatsAppBusiness #VentasRD', cta: 'Escríbenos al DM' },
   { id: 'dd3', idPieza: 'p000', tema: 'EJEMPLO · Nuevas métricas por elemento en Meta Ads', formato: 'Carrusel', laminas: 6, version: 1, estado: 'Diseñando', imagenes: 0, enlaces: [] }
 ];
 // Arte de ejemplo dibujado en el momento (solo modo demo)
@@ -1923,6 +1935,51 @@ function pintarEstudio() {
   info.scrollTop = 0;
 }
 
+// ---- Logo EXACTO: la IA deja el espacio y aquí se estampa tu logo vectorial real ----
+// Formato de cada línea de la columna Logo: tipo|posición|color  (ej. isotipo|abajo-centro|lima, o "-" para ninguno)
+const COLOR_LOGO = { verde: '#02261e', 'verde oscuro': '#02261e', lima: '#dafc92', blanco: '#ffffff', turquesa: '#89c9c9', 'blanco hielo': '#f2f7f9' };
+const ASPECTO_ISO = 423 / 214, ASPECTO_LOGO = 749 / 138;
+function cargarImg(src) {
+  return new Promise((ok, mal) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => mal(new Error('No pude abrir la imagen.')); i.src = src; });
+}
+function svgComoImagen(svg, color, aspecto) {
+  const conTamano = svgColor(svg, color).replace('<svg ', '<svg width="1000" height="' + Math.round(1000 / aspecto) + '" ');
+  return cargarImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(conTamano));
+}
+function hayLogo(spec) { const t = String(spec || '').trim().toLowerCase(); return !!t && t !== '-' && !/^ningun/.test(t); }
+async function componerArte(dataUrl, spec) {
+  if (!hayLogo(spec)) return dataUrl;
+  const [tipoRaw, posRaw, colRaw] = String(spec).toLowerCase().split('|').map(x => (x || '').trim());
+  const base = await cargarImg(dataUrl);
+  const W = base.naturalWidth, H = base.naturalHeight;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d'); x.drawImage(base, 0, 0);
+  const color = COLOR_LOGO[colRaw] || (/^#[0-9a-f]{6}$/.test(colRaw) ? colRaw : '#02261e');
+  const m = W * 0.075;
+  let w, h, partes;
+  if (/^iso/.test(tipoRaw)) { w = W * 0.16; h = w / ASPECTO_ISO; partes = [[SVG_ISOTIPO, ASPECTO_ISO, 0, 0, w, h]]; }
+  else if (/^(logotipo|palabra|wordmark)/.test(tipoRaw)) { w = W * 0.30; h = w / ASPECTO_LOGO; partes = [[SVG_LOGOTIPO, ASPECTO_LOGO, 0, 0, w, h]]; }
+  else { // horizontal: isotipo + palabra, como en el manual
+    h = W * 0.42 / 7.08; const iw = h * ASPECTO_ISO, th = h * 0.89, tw = th * ASPECTO_LOGO; w = iw + h * 0.27 + tw;
+    partes = [[SVG_ISOTIPO, ASPECTO_ISO, 0, 0, iw, h], [SVG_LOGOTIPO, ASPECTO_LOGO, iw + h * 0.27, (h - th) / 2, tw, th]];
+  }
+  const [vert, horiz] = (posRaw || 'abajo-centro').split('-');
+  const X = horiz === 'izquierda' ? m : horiz === 'derecha' ? W - m - w : (W - w) / 2;
+  const Y = vert === 'arriba' ? m : vert === 'centro' ? (H - h) / 2 : H - m - h;
+  // Seguro de contraste: si el color pedido casi no se ve sobre ese fondo, usa verde oscuro o lima
+  let tinta = color;
+  try {
+    const px = x.getImageData(Math.max(0, X), Math.max(0, Y), Math.max(1, Math.round(w)), Math.max(1, Math.round(h))).data;
+    let suma = 0; for (let i = 0; i < px.length; i += 16) suma += 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
+    const fondo = suma / (px.length / 16) / 255;
+    const lum = hex => { const v = parseInt(hex.slice(1), 16); return (0.2126 * (v >> 16) + 0.7152 * ((v >> 8) & 255) + 0.0722 * (v & 255)) / 255; };
+    if (Math.abs(lum(color) - fondo) < 0.28) tinta = fondo > 0.5 ? '#02261e' : '#dafc92';
+  } catch (e) { /* sin lectura de píxeles: se queda el color pedido */ }
+  for (const [svg, asp, dx, dy, pw, ph] of partes) x.drawImage(await svgComoImagen(svg, tinta, asp), X + dx, Y + dy, pw, ph);
+  return cv.toDataURL('image/png');
+}
+const logoDe = (d, n, version) => ((version ? ((d.versiones || []).find(v => String(v.version) === String(version)) || {}).logos : d.logos) || [])[n];
+
 async function cargarArte(d, n, version) {
   const clave = d.id + '|' + (version ? 'v' + version : d.version + '|' + d.estado) + '|' + n;
   const poner = html => { const m = $('.estudio-marco'); if (m && EST.lista[EST.i] === d && EST.n === n && String(EST.ver || '') === String(version || '')) m.innerHTML = html; };
@@ -1930,8 +1987,10 @@ async function cargarArte(d, n, version) {
   try {
     const r = await api(Object.assign({ accion: 'imagenDiseno', id: d.id, n: n }, version ? { version: version } : {}));
     const ks = Object.keys(EST.img); if (ks.length > 8) delete EST.img[ks[0]]; // poca memoria en la Switch
-    EST.img[clave] = r.data;
-    poner('<img src="' + r.data + '" alt="">');
+    let arte = r.data;
+    try { arte = await componerArte(r.data, logoDe(d, n, version)); } catch (e) { /* si falla, se muestra sin logo */ }
+    EST.img[clave] = arte;
+    poner('<img src="' + arte + '" alt="">');
   } catch (err) { poner('<div class="estudio-cargando">⚠️<small>' + esc(err.message) + '</small></div>'); }
 }
 
@@ -1967,15 +2026,26 @@ async function pedirOtraVersion(d) {
   pintarEstudio();
 }
 
+// Al aprobar: arma cada lámina con el logo exacto y la guarda en Drive (AI office · Diseños / Finales)
+async function guardarFinales(d) {
+  const total = d.imagenes || 0;
+  for (let n = 0; n < total; n++) {
+    avisar('🎨 Guardando arte final ' + (n + 1) + ' de ' + total + '…');
+    const r = await api({ accion: 'imagenDiseno', id: d.id, n: n });
+    const final = await componerArte(r.data, logoDe(d, n));
+    await apiPost({ accion: 'guardarFinal', id: d.id, n: n, data: final });
+  }
+}
 async function decidirDiseno(d, decision) {
   EST.ocupado = true; sonar(decision === 'aprobar' ? 'si' : 'no');
   try {
+    if (decision === 'aprobar') await guardarFinales(d);
     await api({ accion: 'decidirDiseno', id: d.id, decision: decision });
     EST.lista.splice(EST.i, 1);
     if (EST.i >= EST.lista.length) EST.i = 0;
     EST.n = 0;
     avisar(decision === 'aprobar'
-      ? '✅ Diseño aprobado. Lo tienes en Magnific y en la carpeta "AI office · Diseños" de tu Drive.'
+      ? '✅ Diseño aprobado. Los artes finales, con tu logo exacto, están en Drive: "AI office · Diseños" → Finales.'
       : '🗑 Diseño descartado. La pieza volvió a la mesa del Creativo.');
   } catch (err) { sonar('error'); avisar(errDisenador(err), true); manejarPinMalo(err); }
   EST.ocupado = false;
