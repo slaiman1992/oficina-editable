@@ -204,11 +204,12 @@ body.liviano .aviso-toast { box-shadow: none; }
 .etiqueta.listo { background: var(--lima); color: var(--verde); box-shadow: none; }
 .etiqueta.error { background: #ffe3e0; color: #a3261d; box-shadow: none; }
 .etiqueta.curso { background: var(--turquesa); color: var(--verde); box-shadow: none; }
-.alcance { display: flex; gap: 8px; margin: 8px 0 12px; flex-wrap: wrap; }
+.alcance { display: flex; gap: 8px; margin: 4px 0 8px; flex-wrap: wrap; }
 .alcance span { padding: 7px 14px; border-radius: 10px; font: 600 14px 'Poppins'; background: #fff; box-shadow: inset 0 0 0 1px var(--linea); }
 .alcance span.activa { background: var(--lima); color: var(--verde); box-shadow: none; }
 .alcance small { align-self: center; font: 600 12px 'Roboto Mono'; color: var(--tinta-suave); }
-.opciones-otra .op { background: #fff; border-radius: 12px; padding: 11px 14px; margin: 6px 0; font: 500 16px 'Poppins'; box-shadow: inset 0 0 0 1px var(--linea); cursor: pointer; }
+.opciones-otra .op { background: #fff; border-radius: 10px; padding: 7px 12px; margin: 4px 0; font: 500 15px/1.3 'Poppins'; box-shadow: inset 0 0 0 1px var(--linea); cursor: pointer; scroll-margin: 8px; }
+.titulo-otra { font: 700 20px 'Poppins'; margin: 0 0 4px; }
 .opciones-otra .op.sel { background: var(--verde); color: var(--lima); box-shadow: none; }
 .costo { font: 600 13px 'Roboto Mono'; color: var(--tinta-suave); margin: 10px 2px 0; }
 body.liviano #estudio { backdrop-filter: none; background: rgba(1,20,15,.82); }
@@ -1997,12 +1998,19 @@ async function cargarArte(d, n, version) {
 function pintarOtraVersion(d) {
   const total = d.imagenes || 0;
   const n = EST.alcance === 'todas' ? (d.laminas || total || 1) : 1;
-  $('#estudio-info').innerHTML = '<div class="carta-titulo">' + (d.estado === 'Error' ? 'Reintentar' : 'Otra versión') + '</div>' +
+  $('#estudio-info').innerHTML = '<div class="titulo-otra">' + (d.estado === 'Error' ? 'Reintentar' : 'Otra versión') + '</div>' +
     (total > 1 ? '<div class="alcance"><span class="' + (EST.alcance === 'lamina' ? 'activa' : '') + '">Solo lámina ' + (EST.n + 1) + '</span><span class="' +
       (EST.alcance === 'todas' ? 'activa' : '') + '">Todo el carrusel</span><small>◀ ▶ cambia</small></div>' : '') +
     '<div class="opciones-otra">' + OPCIONES_OTRA.map((t, i) => '<div class="op' + (i === EST.op ? ' sel' : '') + '" data-op="' + i + '">' + esc(t) + '</div>').join('') + '</div>' +
     '<p class="costo">' + creditosTxt(n) + ' de Magnific · ▲▼ elige · A envía</p>';
   pintarPieEstudio(d);
+  // Que la opción elegida siempre quede a la vista
+  const sel = $('#estudio-info .op.sel');
+  if (sel) {
+    const caja = $('#estudio-info'), rc = caja.getBoundingClientRect(), rs = sel.getBoundingClientRect();
+    if (EST.op === 0) caja.scrollTop = 0;
+    else if (rs.top < rc.top || rs.bottom > rc.bottom) caja.scrollTop += (rs.top - rc.top) - rc.height / 2 + rs.height / 2;
+  }
 }
 
 async function pedirOtraVersion(d) {
