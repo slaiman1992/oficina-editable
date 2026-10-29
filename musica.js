@@ -228,6 +228,11 @@
     setTimeout(() => { arrancarPista(estilo, 0, s); aplicarVolumen(0.8); }, 400);
     if (!M.sonando) reproducir(estilo);
   }
+  function ponerVolumen(v) {
+    M.volumen = Math.round(Math.max(0, Math.min(1, v)) * 10) / 10;
+    guardarL('volumen', M.volumen); aplicarVolumen(0.15); M.alCambiar();
+    return M.volumen;
+  }
   function cambiarVolumen() {
     const pasos = [0.35, 0.7, 1];
     M.volumen = pasos[(pasos.indexOf(M.volumen) + 1) % pasos.length] || 0.7;
@@ -241,6 +246,6 @@
   function nivel() { if (!medidor) return 0; const d = new Float32Array(medidor.fftSize); medidor.getFloatTimeDomainData(d); let s = 0, pico = 0; d.forEach(v => { s += v * v; pico = Math.max(pico, Math.abs(v)); }); return { rms: +Math.sqrt(s / d.length).toFixed(3), pico: +pico.toFixed(3), estado: ctx.state }; }
   // Para grabar una muestra (pruebas): devuelve el audio de salida como un stream
   function _stream() { const d = ctx.createMediaStreamDestination(); salida.connect(d); return d.stream; }
-  Object.assign(M, { silenciar, anterior, _stream, nivel, reproducir, pausar, alternar, siguiente, lugar, atenuar, cambiarVolumen, quiereSonar: () => leerL('encendida', false) });
+  Object.assign(M, { ponerVolumen, silenciar, anterior, _stream, nivel, reproducir, pausar, alternar, siguiente, lugar, atenuar, cambiarVolumen, quiereSonar: () => leerL('encendida', false) });
   window.MUSICA = M;
 })();
