@@ -179,6 +179,42 @@ body.liviano .aviso-toast { box-shadow: none; }
 .efe-idea { font: 500 13.5px/1.4 'Poppins'; color: var(--tinta-suave); margin-top: 3px; }
 .efe-vacio { font: 500 14px 'Poppins'; color: var(--tinta-suave); padding: 10px 2px; }
 
+/* ---------- Mesa del Diseñador ---------- */
+#estudio { position: fixed; inset: 0; z-index: 10; background: rgba(1,20,15,.55); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 18px; }
+#estudio-caja { width: min(1120px, 100%); height: min(680px, calc(100vh - 36px)); background: var(--hueso); border-radius: 26px; box-shadow: 0 30px 70px rgba(0,0,0,.45); display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+#estudio-cabeza { display: flex; align-items: center; gap: 12px; padding: 14px 20px; background: var(--verde); color: var(--hueso); }
+#estudio-cabeza .iso { width: 50px; }
+#estudio-cabeza span.ico { font-size: 24px; }
+#estudio-cabeza h2 { margin: 0; font: 700 22px 'Poppins'; color: var(--lima); }
+#estudio-contador { margin-left: auto; font: 600 15px 'Roboto Mono'; background: rgba(218,252,146,.14); color: var(--lima); border-radius: 10px; padding: 5px 11px; }
+#estudio-cuerpo { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; padding: 18px 22px; overflow: hidden; min-height: 0; }
+#estudio-cuerpo.solo { grid-template-columns: minmax(0, 1fr); }
+#estudio-imagen { height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#estudio-imagen:empty { display: none; }
+.estudio-marco { flex: 1; min-height: 0; aspect-ratio: 3 / 4; background: #dfe7e6; border-radius: 16px; overflow: hidden; display: grid; place-items: center; box-shadow: 0 10px 24px rgba(2,38,30,.18); }
+.estudio-marco img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.estudio-cargando { font-size: 42px; text-align: center; padding: 16px; }
+.estudio-cargando small { display: block; font: 500 14px 'Poppins'; color: var(--tinta-suave); margin-top: 8px; }
+.estudio-laminas { font: 600 13px 'Roboto Mono'; color: var(--tinta-suave); }
+.estudio-espera { flex: 1; min-height: 0; aspect-ratio: 3 / 4; border-radius: 16px; background: var(--verde); color: var(--lima); display: grid; place-content: center; text-align: center; font-size: 56px; padding: 20px; }
+.estudio-espera p { font: 700 22px 'Poppins'; margin: 10px 0 4px; }
+.estudio-espera small { font: 500 14px 'Poppins'; color: var(--turquesa); }
+#estudio-info { overflow-y: auto; scroll-behavior: smooth; padding-right: 6px; min-height: 0; }
+#estudio-pie { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 14px 16px; background: #e7eeee; }
+.etiqueta.listo { background: var(--lima); color: var(--verde); box-shadow: none; }
+.etiqueta.error { background: #ffe3e0; color: #a3261d; box-shadow: none; }
+.etiqueta.curso { background: var(--turquesa); color: var(--verde); box-shadow: none; }
+.alcance { display: flex; gap: 8px; margin: 8px 0 12px; flex-wrap: wrap; }
+.alcance span { padding: 7px 14px; border-radius: 10px; font: 600 14px 'Poppins'; background: #fff; box-shadow: inset 0 0 0 1px var(--linea); }
+.alcance span.activa { background: var(--lima); color: var(--verde); box-shadow: none; }
+.alcance small { align-self: center; font: 600 12px 'Roboto Mono'; color: var(--tinta-suave); }
+.opciones-otra .op { background: #fff; border-radius: 12px; padding: 11px 14px; margin: 6px 0; font: 500 16px 'Poppins'; box-shadow: inset 0 0 0 1px var(--linea); cursor: pointer; }
+.opciones-otra .op.sel { background: var(--verde); color: var(--lima); box-shadow: none; }
+.costo { font: 600 13px 'Roboto Mono'; color: var(--tinta-suave); margin: 10px 2px 0; }
+body.liviano #estudio { backdrop-filter: none; background: rgba(1,20,15,.82); }
+body.liviano #estudio-caja { box-shadow: none; }
+@media (max-width: 760px) { #estudio-cuerpo { grid-template-columns: minmax(0, 1fr); grid-template-rows: 52% minmax(0, 1fr); } }
+
 /* ---------- Máquinas arcade (pantalla completa) ---------- */
 #arcade { position: fixed; inset: 0; z-index: 25; background: #010d0a; display: grid; place-items: center; }
 #arcade canvas { width: 100vw; height: 100vh; object-fit: contain; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
@@ -210,6 +246,7 @@ body.liviano .aviso-toast { box-shadow: none; }
     <div class="ficha chip" title="Noticias por decidir">📰 <b id="c-noticias">0</b></div>
     <div class="ficha chip" title="Tendencias por decidir">🔥 <b id="c-tendencias">0</b></div>
     <div class="ficha chip" title="Piezas por revisar">✍️ <b id="c-piezas">0</b></div>
+    <div class="ficha chip" title="Diseños listos para revisar">🎨 <b id="c-disenos">0</b></div>
     <div class="ficha chip oculto" id="musica-chip" title="Música">🎵 <span id="musica-txt"></span></div>
     <div class="ficha chip accion" data-accion="MAS"><span class="btn MAS">+</span>Menú <span id="conexion"></span></div>
   </div>
@@ -280,6 +317,15 @@ body.liviano .aviso-toast { box-shadow: none; }
       <span id="pizarra-contador">0 de 0</span></div>
     <div id="pizarra-cuerpo"><div id="pizarra-contenido"></div></div>
     <div id="pizarra-pie"></div>
+  </div>
+</div>
+
+<!-- Mesa del Diseñador (Claude + Magnific) -->
+<div id="estudio" class="oculto">
+  <div id="estudio-caja">
+    <div id="estudio-cabeza"><span class="iso logo-iso-lima"></span><span class="ico">🎨</span><h2>Mesa del Diseñador</h2><span id="estudio-contador">0 de 0</span></div>
+    <div id="estudio-cuerpo"><div id="estudio-imagen"></div><div id="estudio-info"></div></div>
+    <div id="estudio-pie"></div>
   </div>
 </div>
 
@@ -409,6 +455,29 @@ const demo = {
     ]
   }
 };
+demo.disenos = [
+  { id: 'dd1', idPieza: 'p0', tema: 'EJEMPLO · El Black Friday no se improvisa', formato: 'Post', laminas: 1, version: 1, estado: 'Listo', creditos: 180, imagenes: 1, enlaces: ['https://www.magnific.com'],
+    nota: 'Fondo verde oscuro y titular en lima. Sin logo: es una pieza de consejo.', gancho: 'El Black Friday no se improvisa.', copy: 'Texto de ejemplo para el copy…', hashtags: '#MarketingDigitalRD #NegociosRD', cta: 'Agenda tu plan' },
+  { id: 'dd2', idPieza: 'p00', tema: 'EJEMPLO · Errores al compartir el WhatsApp del negocio', formato: 'Carrusel', laminas: 3, version: 2, estado: 'Listo', creditos: 720, imagenes: 3, enlaces: ['https://www.magnific.com', 'https://www.magnific.com', 'https://www.magnific.com'],
+    comentario: 'Más simple, con menos elementos', nota: 'Portada con el gancho, interiores numeradas y cierre con logo.', gancho: '¿Tu equipo usa el mismo WhatsApp y se pierden ventas?', copy: 'Texto de ejemplo…', hashtags: '#WhatsAppBusiness #VentasRD', cta: 'Escríbenos al DM' },
+  { id: 'dd3', idPieza: 'p000', tema: 'EJEMPLO · Nuevas métricas por elemento en Meta Ads', formato: 'Carrusel', laminas: 6, version: 1, estado: 'Diseñando', imagenes: 0, enlaces: [] }
+];
+// Arte de ejemplo dibujado en el momento (solo modo demo)
+function demoArte(d, n) {
+  const cv = document.createElement('canvas'); cv.width = 600; cv.height = 800;
+  const x = cv.getContext('2d'), fondos = ['#02261e', '#dafc92', '#89c9c9', '#f2f7f9'], f = fondos[(n + d.version) % 4], oscuro = f === '#02261e';
+  x.fillStyle = f; x.fillRect(0, 0, 600, 800);
+  x.strokeStyle = oscuro ? '#89c9c9' : '#02261e'; x.globalAlpha = 0.35; x.lineWidth = 3;
+  [[520, 160, 120], [520, 420, 120], [430, 640, 90]].forEach(([cx, cy, r]) => { x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.stroke(); });
+  x.globalAlpha = 1; x.fillStyle = oscuro ? '#dafc92' : '#02261e'; x.font = '700 30px Poppins, sans-serif';
+  x.fillText(d.laminas > 1 ? String(n + 1).padStart(2, '0') + '.' : 'EJEMPLO', 60, 150);
+  x.font = '700 54px Poppins, sans-serif';
+  (d.gancho || d.tema).split(' ').reduce((l, w) => { const t = l.length ? l[l.length - 1] + ' ' + w : w; if (l.length && x.measureText(t).width < 440) l[l.length - 1] = t; else l.push(w); return l; }, []).slice(0, 6)
+    .forEach((linea, i) => x.fillText(linea, 60, 260 + i * 64));
+  x.font = '600 18px "Roboto Mono", monospace'; x.fillStyle = oscuro ? '#89c9c9' : '#02261e';
+  x.fillText('DEMO · versión ' + d.version, 60, 740);
+  return cv.toDataURL('image/png');
+}
 function demoApi(p) {
   return new Promise(res => setTimeout(() => {
     marcarConexion(true);
@@ -426,6 +495,28 @@ function demoApi(p) {
       const base = Math.pow(demo.jugador.nivel - 1, 2) * 60, sig = Math.pow(demo.jugador.nivel, 2) * 60;
       demo.jugador.progreso = Math.round((demo.jugador.xp - base) / (sig - base) * 100);
       return res({ ok: true, jugador: Object.assign({}, demo.jugador), subioNivel: demo.jugador.nivel > antes, xpGanada: gana });
+    }
+    // ---- Diseñador (demo) ----
+    if (p.accion === 'disenos') return res({ ok: true, disenos: demo.disenos.map(d => Object.assign({}, d)) });
+    if (p.accion === 'imagenDiseno') {
+      const d = demo.disenos.find(x => x.id === p.id);
+      return res(d && d.imagenes ? { ok: true, n: Number(p.n || 0), total: d.imagenes, data: demoArte(d, Number(p.n || 0)) } : { ok: false, error: 'Sin imágenes todavía (demo).' });
+    }
+    if (p.accion === 'disenar') {
+      const c = demo.cartas.piezas.find(x => x.id === p.id);
+      if (!c) return res({ ok: false, error: 'No encontré esa pieza (demo).' });
+      demo.cartas.piezas = demo.cartas.piezas.filter(x => x.id !== p.id);
+      const d = { id: 'dd' + Date.now(), idPieza: c.id, tema: c.titulo, formato: c.formato, laminas: contarLaminas(c), version: 1, estado: 'Diseñando', imagenes: 0, enlaces: [], gancho: c.gancho, copy: c.copy, hashtags: c.hashtags, cta: c.cta };
+      demo.disenos.push(d);
+      setTimeout(() => { d.estado = 'Listo'; d.imagenes = d.laminas; d.nota = 'Ejemplo: carrusel en verde oscuro y lima, sin logo en las interiores y con logo en el cierre.'; d.enlaces = Array(d.laminas).fill('https://www.magnific.com'); }, 9000);
+      return res({ ok: true, id: d.id, laminas: d.laminas, creditos: d.laminas * 180 });
+    }
+    if (p.accion === 'decidirDiseno') {
+      const d = demo.disenos.find(x => x.id === p.id);
+      if (!d) return res({ ok: false, error: 'No encontré ese diseño (demo).' });
+      if (p.decision === 'otra') { d.estado = 'Pedido'; d.version++; d.comentario = p.comentario; d.nota = ''; setTimeout(() => { d.estado = 'Diseñando'; }, 3000); setTimeout(() => { d.estado = 'Listo'; d.nota = 'Ejemplo: apliqué "' + p.comentario + '".'; }, 9000); return res({ ok: true, version: d.version }); }
+      demo.disenos = demo.disenos.filter(x => x.id !== p.id);
+      return res({ ok: true });
     }
     if (p.accion === 'correr') {
       demo.agentes[p.agente === 'Recoger' ? 'Cazatendencias' : p.agente] = { estado: 'Trabajando', detalle: 'Trabajando… (ejemplo)' };
@@ -596,8 +687,9 @@ function mostrarPantalla(p) {
   $('#pantalla-menu').classList.toggle('oculto', p !== 'menu');
   $('#panel').classList.toggle('oculto', p !== 'panel');
   $('#pizarra').classList.toggle('oculto', p !== 'pizarra');
+  $('#estudio').classList.toggle('oculto', p !== 'estudio');
   $('#arcade').classList.toggle('oculto', p !== 'juego');
-  $('#hud').classList.toggle('oculto', !(p === 'oficina' || p === 'panel' || p === 'pizarra'));
+  $('#hud').classList.toggle('oculto', !(p === 'oficina' || p === 'panel' || p === 'pizarra' || p === 'estudio'));
   if (p !== 'oficina') $('#prompt').classList.add('oculto');
   pedirCuadro(); // al cambiar de pantalla se dibuja un cuadro nuevo aunque el 3D esté en pausa
 }
@@ -1194,7 +1286,10 @@ const ESTACIONES = [
   { id: 'Analista', nombre: 'Analista', icono: '🔎', x: 11, z: -7.6, ropa: 0x89c9c9, piel: C.piel3, pelo: C.pelo1, estilo: 'rizado', acento: null,
     acciones: [{ b: 'A', t: 'Pizarra de tendencias', f: () => abrirPanel('tendencias') }, { b: 'Y', t: 'Analizar último lote', f: () => correr('Analista') }, { b: 'X', t: 'Ver estado', f: () => verEstado('Analista') }] },
   { id: 'Creativo', nombre: 'Creativo', icono: '✍️', x: 3.0, z: 5.6, ropa: 0xc2410c, piel: C.piel4, pelo: C.pelo2, estilo: 'largo', acento: null, estudio: true,
-    acciones: [{ b: 'A', t: 'Revisar piezas', f: () => abrirPanel('piezas') }, { b: 'Y', t: 'Crear piezas ahora', f: () => correr('Creativo') }, { b: 'X', t: 'Ver estado', f: () => verEstado('Creativo') }] }
+    acciones: [{ b: 'A', t: 'Revisar piezas', f: () => abrirPanel('piezas') }, { b: 'Y', t: 'Crear piezas ahora', f: () => correr('Creativo') }, { b: 'X', t: 'Ver estado', f: () => verEstado('Creativo') }] },
+  // Diseñador: Claude + Magnific. Solo trabaja cuando le mandas una pieza desde el Creativo (botón +)
+  { id: 'Diseñador', nombre: 'Diseñador', icono: '🎨', x: -9.5, z: -0.6, ropa: 0x6a4fc4, piel: C.piel2, pelo: C.pelo1, estilo: 'rizado', acento: MARCA.lima,
+    acciones: [{ b: 'A', t: 'Mesa del Diseñador', f: () => abrirEstudio() }, { b: 'X', t: 'Ver estado', f: () => verEstado('Diseñador') }] }
 ];
 const COLOR_ESTADO = { 'Trabajando': 0x7ee08a, 'Listo': 0x89c9c9, 'Listo con avisos': 0xf5b84a, 'Error': 0xff5a52, 'En cola': 0xf5b84a, 'Inactivo': 0x7d8a87 };
 const CSS_ESTADO = { 'Trabajando': '#7ee08a', 'Listo': '#89c9c9', 'Listo con avisos': '#f5b84a', 'Error': '#ff5a52', 'En cola': '#f5b84a', 'Inactivo': '#7d8a87' };
@@ -1225,6 +1320,12 @@ function construirEstacion(e) {
   if (e.id === 'Filtro') { const c = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.5, 18, 1, true), mate(0x3c4a8c, { side: THREE.DoubleSide })); c.rotation.x = Math.PI; c.position.set(-1.7, 2.4, -0.2); g.add(c); }
   if (e.id === 'Cazatendencias') { caja(0.36, 0.62, 0.05, 0x111111, -1.7, 2.1, -0.2, { r: 0.04, padre: g }).rotation.x = -0.35; }
   if (e.id === 'Analista') { [0.35, 0.6, 0.85].forEach((h, i) => caja(0.18, h, 0.18, [MARCA.turquesa, MARCA.lima, MARCA.verde][i], -1.95 + i * 0.26, 2.08, -0.3, { r: 0.03, padre: g })); }
+  if (e.id === 'Diseñador') {
+    caja(1.0, 0.05, 0.7, 0x1b1f1e, -1.55, 2.08, 0.25, { r: 0.04, padre: g });                       // tableta de dibujo
+    cilindro(0.03, 0.03, 0.7, MARCA.lima, -1.5, 2.16, 0.25, { padre: g }).rotation.z = Math.PI / 2;  // lápiz
+    cilindro(0.17, 0.15, 0.38, MARCA.turquesa, -2.0, 2.08, -0.35, { padre: g });                     // vaso de lápices
+    [0x02261e, 0xdafc92, 0xf2f7f9].forEach((col, i) => cilindro(0.025, 0.025, 0.55, col, -2.05 + i * 0.06, 2.3, -0.35, { padre: g }));
+  }
   // Estudio del Creativo: fondo lima, aro de luz y cámara en trípode
   if (e.estudio) {
     caja(4.4, 3.4, 0.12, MARCA.lima, 5.6, 0, -1.6, { r: 0.04, padre: g });
@@ -1464,6 +1565,7 @@ function manejar(a) {
   if (pantalla === 'menu') return manejarMenu(a);
   if (pantalla === 'panel') return manejarPanel(a);
   if (pantalla === 'pizarra') return manejarPizarra(a);
+  if (pantalla === 'estudio') return manejarEstudio(a);
   if (pantalla !== 'oficina') return;
   if (confirmacion) {
     if (a === 'A') { const f = confirmacion; confirmacion = null; pintarPrompt(); f(); }
@@ -1548,7 +1650,7 @@ function cerrarPanel() { mostrarPantalla('oficina'); pintarPrompt(); refrescarEs
 function pintarPie() {
   const t = PANEL.tipo;
   const b = t === 'piezas'
-    ? [['A', 'Aprobar'], ['B', 'Descartar'], ['Y', 'Ya producida'], ['X', 'Ver fuente'], ['FLECHAS', 'Otra'], ['MENOS', 'Cerrar']]
+    ? [['A', 'Aprobar'], ['B', 'Descartar'], ['Y', 'Ya producida'], ['X', 'Ver fuente'], ['MAS', 'Al Diseñador'], ['FLECHAS', 'Otra'], ['MENOS', 'Cerrar']]
     : [['A', 'Me gusta'], ['B', 'Descartar'], ['Y', 'Al Creativo'], ['X', 'Ver fuente'], ['FLECHAS', 'Otra'], ['MENOS', 'Cerrar']];
   $('#panel-pie').innerHTML = b.map(x => boton(x[0], x[1])).join('');
 }
@@ -1590,8 +1692,9 @@ function pintarCarta(animar) {
 
 function manejarPanel(a) {
   if (PANEL.ocupado) return;
-  if (a === 'MENOS' || a === 'MAS') return cerrarPanel();
   const c = PANEL.cartas[PANEL.i];
+  if (a === 'MAS' && PANEL.tipo === 'piezas' && c) return enviarAlDisenador(c);
+  if (a === 'MENOS' || a === 'MAS') return cerrarPanel();
   if (a === 'DER' && PANEL.cartas.length) { PANEL.i = (PANEL.i + 1) % PANEL.cartas.length; sonar('click'); return pintarCarta(true); }
   if (a === 'IZQ' && PANEL.cartas.length) { PANEL.i = (PANEL.i - 1 + PANEL.cartas.length) % PANEL.cartas.length; sonar('click'); return pintarCarta(true); }
   if (a === 'ARRIBA') { $('#carta').scrollTop -= 120; return; }
@@ -1632,6 +1735,267 @@ async function decidir(carta, decision, animacion, sonido, mensaje) {
   }
   setTimeout(() => { PANEL.ocupado = false; pintarCarta(true); }, 260);
 }
+
+// ============================================================
+//  DISEÑADOR (Claude + Magnific): solo trabaja cuando tú se lo pides
+// ============================================================
+const CREDITOS_ARTE = 180; // aprox. por arte en Magnific
+const OPCIONES_OTRA = [
+  'Más simple, con menos elementos',
+  'Cambia el color de fondo',
+  'Titular más grande y más corto',
+  'Otra composición, otra idea visual',
+  'Agrega el logo de Editable',
+  'Quita el logo',
+  'Corrige errores en el texto',
+  '✏️ Escribir mi propio comentario…'
+];
+const EST = { lista: [], i: 0, n: 0, img: {}, ocupado: false, modo: 'ver', op: 0, alcance: 'lamina', confirmarB: 0 };
+const estadosDisenos = {};
+let pedidoDiseno = null, ultimoDisenos = -1e9;
+
+// Misma regla que la hoja: cuántas láminas trae la pieza
+function contarLaminas(c) {
+  if (!/carrusel/i.test(c.formato || '')) return 1;
+  const nums = new Set((String(c.contenido || '').match(/l[áa]mina\s*(\d+)/gi) || []).map(m => m.replace(/\D/g, '')));
+  return Math.max(1, Math.min(10, nums.size || String(c.contenido || '').split(/\n\s*\n/).filter(s => s.trim()).length));
+}
+const creditosTxt = n => '≈ ' + (n * CREDITOS_ARTE).toLocaleString('es-DO') + ' créditos';
+const errDisenador = err => /desconocida/i.test(err.message) ? 'Falta instalar el bloque del Diseñador en tu hoja (te dejé la guía).' : err.message;
+
+// Botón + en la mesa del Creativo: hay que presionarlo dos veces (muestra el costo primero)
+async function enviarAlDisenador(c) {
+  if (/reel/i.test(c.formato || '')) { sonar('error'); avisar('🎬 Los reels no se mandan al Diseñador: solo posts y carruseles.'); return; }
+  const n = contarLaminas(c);
+  if (!pedidoDiseno || pedidoDiseno.id !== c.id || performance.now() > pedidoDiseno.hasta) {
+    pedidoDiseno = { id: c.id, hasta: performance.now() + 6000 };
+    sonar('click');
+    avisar('🎨 ' + (n > 1 ? n + ' láminas' : '1 arte') + ' · ' + creditosTxt(n) + ' de Magnific. Presiona + otra vez para enviarla al Diseñador.');
+    return;
+  }
+  pedidoDiseno = null;
+  PANEL.ocupado = true;
+  $('#carta').className = 'sale-arriba'; sonar('creativo');
+  try {
+    const r = await api({ accion: 'disenar', id: c.id });
+    PANEL.cartas.splice(PANEL.i, 1);
+    if (PANEL.i >= PANEL.cartas.length) PANEL.i = 0;
+    $('#c-piezas').textContent = PANEL.cartas.length;
+    if (r.aviso) avisar('🎨 ' + r.aviso, true); else avisar('🎨 Enviada al Diseñador. Te aviso cuando esté lista (unos minutos).');
+    const d = ESTACIONES.find(e => e.id === 'Diseñador');
+    if (d) d.estado = { estado: 'En cola', detalle: 'Pedido recibido: ' + (c.titulo || '') };
+    setTimeout(() => refrescarDisenos(true), 20000);
+  } catch (err) { sonar('error'); avisar(errDisenador(err), true); manejarPinMalo(err); }
+  setTimeout(() => { PANEL.ocupado = false; pintarCarta(true); }, 260);
+}
+
+// Estado del Diseñador para el anillo, el monitor y el contador 🎨 (consulta liviana, cada ~30 s)
+async function refrescarDisenos(forzar) {
+  if (!DEMO && !pin) return;
+  if (!forzar && performance.now() - ultimoDisenos < 28000) return;
+  ultimoDisenos = performance.now();
+  const est = ESTACIONES.find(e => e.id === 'Diseñador');
+  try {
+    const r = await api({ accion: 'disenos', ligero: '1' });
+    const ds = r.disenos || [];
+    const cuenta = k => ds.filter(d => d.estado === k).length;
+    const listos = cuenta('Listo'), enCurso = cuenta('Diseñando'), pedidos = cuenta('Pedido'), errores = cuenta('Error');
+    const pl = (n, s, p) => n + ' ' + (n === 1 ? s : p);
+    est.estado = enCurso ? { estado: 'Trabajando', detalle: 'Diseñando ' + pl(enCurso, 'pieza', 'piezas') + ' en Magnific…' }
+      : pedidos ? { estado: 'En cola', detalle: pl(pedidos, 'pedido', 'pedidos') + ' por empezar.' }
+      : errores ? { estado: 'Error', detalle: pl(errores, 'diseño tuvo', 'diseños tuvieron') + ' un problema. Abre la mesa para ver la nota.' }
+      : listos ? { estado: 'Listo', detalle: pl(listos, 'diseño listo', 'diseños listos') + ' para revisar.' }
+      : { estado: 'Inactivo', detalle: 'Esperando tu pedido: en la mesa del Creativo, presiona + sobre una pieza.' };
+    $('#c-disenos').textContent = listos;
+    ds.forEach(d => {
+      const antes = estadosDisenos[d.id];
+      if (antes && antes !== 'Listo' && d.estado === 'Listo') { sonar('nivel'); avisar('🎨 El Diseñador terminó: ' + d.tema); }
+      estadosDisenos[d.id] = d.estado;
+    });
+  } catch (err) {
+    if (/desconocida/i.test(err.message)) est.estado = { estado: 'Inactivo', detalle: 'Falta instalar el bloque del Diseñador en tu hoja.' };
+  }
+  if (!confirmacion && pantalla === 'oficina') pintarPrompt();
+}
+
+// ---- La mesa (pantalla con el arte) ----
+const ORDEN_ESTADO = { 'Listo': 0, 'Error': 1, 'Diseñando': 2, 'Pedido': 3 };
+async function abrirEstudio() {
+  EST.i = 0; EST.n = 0; EST.modo = 'ver';
+  mostrarPantalla('estudio'); sonar('abrir');
+  $('#estudio-imagen').innerHTML = '';
+  $('#estudio-info').innerHTML = '<div class="vacio"><div>⏳</div></div>';
+  $('#estudio-pie').innerHTML = boton('MENOS', 'Cerrar');
+  await recargarEstudio(true);
+}
+async function recargarEstudio(primera) {
+  const actual = EST.lista[EST.i] && EST.lista[EST.i].id;
+  try {
+    const r = await api({ accion: 'disenos' });
+    EST.lista = (r.disenos || []).sort((a, b) => (a.estado in ORDEN_ESTADO ? ORDEN_ESTADO[a.estado] : 9) - (b.estado in ORDEN_ESTADO ? ORDEN_ESTADO[b.estado] : 9));
+    EST.lista.forEach(d => {
+      const antes = estadosDisenos[d.id];
+      if (!primera && antes && antes !== 'Listo' && d.estado === 'Listo') { sonar('nivel'); avisar('🎨 Listo: ' + d.tema); }
+      estadosDisenos[d.id] = d.estado;
+    });
+    const k = EST.lista.findIndex(d => d.id === actual);
+    EST.i = k >= 0 ? k : Math.min(EST.i, Math.max(0, EST.lista.length - 1));
+  } catch (err) {
+    if (primera) { avisar(errDisenador(err), true); manejarPinMalo(err); EST.lista = []; }
+  }
+  if (pantalla === 'estudio' && (primera || EST.modo === 'ver')) pintarEstudio();
+}
+function cerrarEstudio() { mostrarPantalla('oficina'); pintarPrompt(); refrescarDisenos(true); }
+
+function pintarPieEstudio(d) {
+  let b;
+  if (!d) b = [['MENOS', 'Cerrar']];
+  else if (EST.modo === 'otra') b = [['FLECHAS', (d.imagenes || 0) > 1 ? '▲▼ opción · ◀▶ lámina o todo' : '▲▼ opción'], ['A', 'Enviar'], ['B', 'Volver']];
+  else {
+    const total = d.imagenes || 0, puede = d.estado === 'Listo' || d.estado === 'Error';
+    b = (puede ? (d.estado === 'Listo' && total ? [['A', 'Aprobar']] : []).concat([['Y', d.estado === 'Error' ? 'Reintentar' : 'Otra versión'], ['B', 'Descartar']]) : [])
+      .concat(total ? [['X', 'Abrir en Magnific']] : [])
+      .concat(total > 1 ? [['L', 'Lámina'], ['R', 'Lámina']] : [])
+      .concat(EST.lista.length > 1 ? [['FLECHAS', 'Otro diseño']] : [])
+      .concat([['MENOS', 'Cerrar']]);
+  }
+  $('#estudio-pie').innerHTML = b.map(x => boton(x[0], x[1])).join('');
+}
+
+function pintarEstudio() {
+  const d = EST.lista[EST.i];
+  $('#estudio-contador').textContent = EST.lista.length ? (EST.i + 1) + ' de ' + EST.lista.length : '0 de 0';
+  pintarPieEstudio(d);
+  const img = $('#estudio-imagen'), info = $('#estudio-info');
+  $('#estudio-cuerpo').classList.toggle('solo', !d);
+  if (!d) {
+    img.innerHTML = '';
+    info.innerHTML = '<div class="vacio"><div><div>🎨</div><p>No hay diseños en la mesa.</p><p style="font-size:16px">En la mesa del Creativo, presiona + sobre un post o carrusel para enviárselo al Diseñador.</p></div></div>';
+    return;
+  }
+  const total = d.imagenes || 0;
+  EST.n = Math.max(0, Math.min(EST.n, total - 1));
+  // Imagen (o aviso de que se está diseñando)
+  if (!total) {
+    img.innerHTML = '<div class="estudio-espera">' + (d.estado === 'Error'
+      ? '⚠️<p>No se pudo diseñar</p><small>Lee la nota y presiona Y para reintentar.</small>'
+      : '🎨<p>' + (d.estado === 'Pedido' ? 'En cola…' : 'Diseñando en Magnific…') + '</p><small>Suele tardar de 2 a 6 minutos.<br>Puedes seguir jugando: te aviso.</small>') + '</div>';
+  } else {
+    img.innerHTML = '<div class="estudio-marco"><div class="estudio-cargando">⏳</div></div>' +
+      '<div class="estudio-laminas">' + (total > 1 ? 'Lámina ' + (EST.n + 1) + ' de ' + total + ' · L / R' : '1 arte') +
+      (d.estado === 'Pedido' || d.estado === 'Diseñando' ? ' · rehaciendo…' : '') + '</div>';
+    cargarArte(d, EST.n);
+  }
+  if (EST.modo === 'otra') return pintarOtraVersion(d);
+  const bl = (t, x, cl) => x ? '<div class="bloque ' + (cl || '') + '"><h4>' + t + '</h4><p>' + esc(x) + '</p></div>' : '';
+  const clase = { 'Listo': 'listo', 'Error': 'error' }[d.estado] || 'curso';
+  info.innerHTML = '<div class="etiquetas"><span class="etiqueta formato">' + esc(d.formato) + '</span>' +
+    '<span class="etiqueta ' + clase + '">' + esc(d.estado) + '</span>' +
+    (d.version > 1 ? '<span class="etiqueta">Versión ' + esc(d.version) + '</span>' : '') +
+    (d.laminas > 1 ? '<span class="etiqueta">' + esc(d.laminas) + ' láminas</span>' : '') +
+    (d.creditos ? '<span class="etiqueta">' + Number(d.creditos).toLocaleString('es-DO') + ' créditos</span>' : '') + '</div>' +
+    '<div class="carta-titulo">' + esc(d.tema) + '</div>' +
+    bl('Nota del Diseñador', d.nota, d.estado === 'Error' ? 'aviso' : '') +
+    (d.comentario ? bl('Tu último pedido de cambio', d.comentario) : '') +
+    bl('Gancho', d.gancho, 'gancho') + bl('Copy para publicar', d.copy) + bl('Hashtags', d.hashtags) + bl('Llamado a la acción', d.cta);
+  info.scrollTop = 0;
+}
+
+async function cargarArte(d, n) {
+  const clave = d.id + '|' + d.version + '|' + d.estado + '|' + n;
+  const poner = html => { const m = $('.estudio-marco'); if (m && EST.lista[EST.i] === d && EST.n === n) m.innerHTML = html; };
+  if (EST.img[clave]) return poner('<img src="' + EST.img[clave] + '" alt="">');
+  try {
+    const r = await api({ accion: 'imagenDiseno', id: d.id, n: n });
+    const ks = Object.keys(EST.img); if (ks.length > 8) delete EST.img[ks[0]]; // poca memoria en la Switch
+    EST.img[clave] = r.data;
+    poner('<img src="' + r.data + '" alt="">');
+  } catch (err) { poner('<div class="estudio-cargando">⚠️<small>' + esc(err.message) + '</small></div>'); }
+}
+
+function pintarOtraVersion(d) {
+  const total = d.imagenes || 0;
+  const n = EST.alcance === 'todas' ? (d.laminas || total || 1) : 1;
+  $('#estudio-info').innerHTML = '<div class="carta-titulo">' + (d.estado === 'Error' ? 'Reintentar' : 'Otra versión') + '</div>' +
+    (total > 1 ? '<div class="alcance"><span class="' + (EST.alcance === 'lamina' ? 'activa' : '') + '">Solo lámina ' + (EST.n + 1) + '</span><span class="' +
+      (EST.alcance === 'todas' ? 'activa' : '') + '">Todo el carrusel</span><small>◀ ▶ cambia</small></div>' : '') +
+    '<div class="opciones-otra">' + OPCIONES_OTRA.map((t, i) => '<div class="op' + (i === EST.op ? ' sel' : '') + '" data-op="' + i + '">' + esc(t) + '</div>').join('') + '</div>' +
+    '<p class="costo">' + creditosTxt(n) + ' de Magnific · ▲▼ elige · A envía</p>';
+  pintarPieEstudio(d);
+}
+
+async function pedirOtraVersion(d) {
+  let comentario = OPCIONES_OTRA[EST.op];
+  if (EST.op === OPCIONES_OTRA.length - 1) {
+    const t = window.prompt('¿Qué quieres que cambie el Diseñador?', '');
+    if (!t || !t.trim()) return;
+    comentario = t.trim();
+  }
+  const lamina = EST.alcance === 'todas' || (d.imagenes || 0) <= 1 ? 'todas' : String(EST.n + 1);
+  EST.ocupado = true; sonar('creativo');
+  try {
+    const r = await api({ accion: 'decidirDiseno', id: d.id, decision: 'otra', comentario: comentario, lamina: lamina });
+    d.estado = 'Pedido'; d.version = r.version || (Number(d.version || 1) + 1); d.comentario = comentario; d.nota = '';
+    estadosDisenos[d.id] = 'Pedido';
+    EST.modo = 'ver';
+    if (r.aviso) avisar('🎨 ' + r.aviso, true);
+    else avisar('🎨 Pedido enviado (' + (lamina === 'todas' ? 'todo el diseño' : 'lámina ' + lamina) + '). Te aviso cuando esté.');
+  } catch (err) { sonar('error'); avisar(errDisenador(err), true); manejarPinMalo(err); }
+  EST.ocupado = false;
+  pintarEstudio();
+}
+
+async function decidirDiseno(d, decision) {
+  EST.ocupado = true; sonar(decision === 'aprobar' ? 'si' : 'no');
+  try {
+    await api({ accion: 'decidirDiseno', id: d.id, decision: decision });
+    EST.lista.splice(EST.i, 1);
+    if (EST.i >= EST.lista.length) EST.i = 0;
+    EST.n = 0;
+    avisar(decision === 'aprobar'
+      ? '✅ Diseño aprobado. Lo tienes en Magnific y en la carpeta "AI office · Diseños" de tu Drive.'
+      : '🗑 Diseño descartado. La pieza volvió a la mesa del Creativo.');
+  } catch (err) { sonar('error'); avisar(errDisenador(err), true); manejarPinMalo(err); }
+  EST.ocupado = false;
+  pintarEstudio();
+}
+
+function manejarEstudio(a) {
+  if (EST.ocupado) return;
+  const d = EST.lista[EST.i];
+  if (EST.modo === 'otra' && d) {
+    if (a === 'B' || a === 'MENOS') { EST.modo = 'ver'; sonar('click'); return pintarEstudio(); }
+    if (a === 'ARRIBA' || a === 'ABAJO') { EST.op = (EST.op + (a === 'ABAJO' ? 1 : -1) + OPCIONES_OTRA.length) % OPCIONES_OTRA.length; sonar('click'); return pintarOtraVersion(d); }
+    if (['IZQ', 'DER', 'L', 'R'].includes(a) && (d.imagenes || 0) > 1) { EST.alcance = EST.alcance === 'lamina' ? 'todas' : 'lamina'; sonar('click'); return pintarOtraVersion(d); }
+    if (a === 'A') return pedirOtraVersion(d);
+    return;
+  }
+  if (a === 'MENOS' || a === 'MAS') return cerrarEstudio();
+  const n = EST.lista.length;
+  if (a === 'DER' && n > 1) { EST.i = (EST.i + 1) % n; EST.n = 0; sonar('click'); return pintarEstudio(); }
+  if (a === 'IZQ' && n > 1) { EST.i = (EST.i - 1 + n) % n; EST.n = 0; sonar('click'); return pintarEstudio(); }
+  if (a === 'ARRIBA') { $('#estudio-info').scrollTop -= 140; return; }
+  if (a === 'ABAJO') { $('#estudio-info').scrollTop += 140; return; }
+  if (!d) { if (a === 'A' || a === 'B') cerrarEstudio(); return; }
+  const total = d.imagenes || 0;
+  if ((a === 'L' || a === 'R') && total > 1) { EST.n = (EST.n + (a === 'R' ? 1 : -1) + total) % total; sonar('click'); return pintarEstudio(); }
+  if (a === 'X') { const u = (d.enlaces || [])[EST.n] || (d.enlaces || [])[0]; if (u) window.open(u, '_blank', 'noopener'); else avisar('Todavía no hay enlace de Magnific.'); return; }
+  if (d.estado !== 'Listo' && d.estado !== 'Error') { if (['A', 'B', 'Y'].includes(a)) avisar('🎨 El Diseñador todavía está trabajando en esta pieza.'); return; }
+  if (a === 'A') { if (d.estado !== 'Listo' || !total) { avisar('Todavía no hay arte para aprobar.'); return; } return decidirDiseno(d, 'aprobar'); }
+  if (a === 'Y') { EST.modo = 'otra'; EST.op = 0; EST.alcance = total > 1 ? 'lamina' : 'todas'; sonar('click'); return pintarEstudio(); }
+  if (a === 'B') {
+    if (EST.confirmarB && performance.now() < EST.confirmarB) { EST.confirmarB = 0; return decidirDiseno(d, 'descartar'); }
+    EST.confirmarB = performance.now() + 4000;
+    avisar('Presiona B otra vez para descartar este diseño (la pieza vuelve al Creativo).');
+  }
+}
+// Con el dedo: tocar una opción de "Otra versión" la elige y la envía
+document.addEventListener('click', e => {
+  const op = e.target.closest('[data-op]');
+  if (!op || pantalla !== 'estudio' || EST.modo !== 'otra' || EST.ocupado) return;
+  EST.op = Number(op.dataset.op);
+  const d = EST.lista[EST.i]; if (d) pedirOtraVersion(d);
+});
 
 // ============================================================
 //  OBJETOS CON LOS QUE SE INTERACTÚA
@@ -2009,6 +2373,7 @@ async function refrescarEstado() {
     if (!confirmacion) pintarPrompt();
   } catch (err) { manejarPinMalo(err); }
   refrescando = false;
+  refrescarDisenos();
 }
 function manejarPinMalo(err) {
   if (err && err.pinMalo) { pin = ''; guardar('pin', ''); pinTemp = ''; mostrarPantalla('pin'); pintarPin(); $('#pin-error').textContent = 'Tu PIN cambió o no es válido. Escríbelo de nuevo.'; }
@@ -2041,7 +2406,11 @@ if (DEMO) $('#demo').classList.remove('oculto');
 // Permite instalar el juego como app (pantalla completa en la Switch)
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
 pintarPin();
-setInterval(() => { if (pantalla === 'oficina' || pantalla === 'panel') refrescarEstado(); }, 15000);
+setInterval(() => {
+  if (pantalla === 'oficina' || pantalla === 'panel') refrescarEstado();
+  // Con la mesa del Diseñador abierta, se actualiza sola mientras algo se esté diseñando
+  if (pantalla === 'estudio' && EST.lista.some(d => d.estado === 'Pedido' || d.estado === 'Diseñando')) recargarEstudio(false);
+}, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refrescarEstado(); });
 
 if (!leer('controles', null) && mandos().length) iniciarCalibracion();
