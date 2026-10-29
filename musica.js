@@ -9,7 +9,8 @@
   const leerL = (k, d) => { try { const v = localStorage.getItem('oficina.musica.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } };
   const guardarL = (k, v) => { try { localStorage.setItem('oficina.musica.' + k, JSON.stringify(v)); } catch (e) {} };
 
-  const M = { sonando: false, estilo: 'enfoque', pista: null, volumen: leerL('volumen', 0.7), atenuada: false, alCambiar: () => {}, aviso: () => {} };
+  const M = { sonando: false, estilo: 'enfoque', pista: null, volumen: leerL('volumen', 0.7), atenuada: false, silenciada: leerL('silenciada', false), alCambiar: () => {}, aviso: () => {} };
+  const historial = { enfoque: [], synthwave: [] }; // semillas de las pistas anteriores (para "Anterior")
   let ctx = null, master, bus, envio, eco, ruido, medidor, salida, timer = null, paso = 0, proximo = 0, P = null, azar = Math.random;
 
   // ---------- utilidades musicales ----------
@@ -82,8 +83,9 @@
     synthwave: ['Neón Caribe', 'Malecón 1986', 'Autopista de noche', 'Cinta VHS', 'Arcade Tropical', 'Láser Lima', 'Atardecer en 8 bits', 'Turbo Caribe', 'Persecución en Bávaro', 'Palmeras de neón']
   };
   const NOTAS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  function nuevaPista(estilo) {
-    const s = Math.floor(Math.random() * 1e9); azar = semilla(s);
+  function nuevaPista(estilo, s) {
+    if (s == null) s = Math.floor(Math.random() * 1e9);
+    azar = semilla(s); // la misma semilla siempre da la misma pista
     const p = { estilo, semilla: s };
     if (estilo === 'enfoque') {
       p.bpm = 76 + Math.floor(azar() * 14);
@@ -164,13 +166,14 @@
       proximo += semi; paso++;
     }
   }
-  function arrancarPista(estilo, desde) {
-    P = nuevaPista(estilo); M.pista = P.nombre; M.estilo = estilo;
+  function arrancarPista(estilo, desde, semillaFija) {
+    if (P && P.estilo === estilo && semillaFija == null) { historial[estilo].push(P.semilla); if (historial[estilo].length > 20) historial[estilo].shift(); }
+    P = nuevaPista(estilo, semillaFija); M.pista = P.nombre; M.estilo = estilo;
     eco.delayTime.setValueAtTime(60 / P.bpm * 0.75, ctx.currentTime);
     paso = 0; proximo = Math.max(desde || 0, ctx.currentTime + 0.1);
     M.alCambiar();
   }
-  function volumenObjetivo() { return M.sonando ? M.volumen * (M.atenuada ? 0.35 : 1) : 0; }
+  function volumenObjetivo() { return M.sonando && !M.silenciada ? M.volumen * (M.atenuada ? 0.35 : 1) : 0; }
   function aplicarVolumen(seg) {
     if (!ctx) return;
     const t = ctx.currentTime; master.gain.cancelScheduledValues(t);
@@ -212,6 +215,19 @@
     setTimeout(() => { arrancarPista(estilo); aplicarVolumen(1.5); }, 700);
   }
   function atenuar(si) { M.atenuada = !!si; aplicarVolumen(0.4); }
+  // Silenciar: la música sigue avanzando pero sin sonido (como el botón de mute)
+  function silenciar(si) { M.silenciada = si == null ? !M.silenciada : !!si; guardarL('silenciada', M.silenciada); aplicarVolumen(0.25); M.alCambiar(); return M.silenciada; }
+  // Anterior: si llevas más de unos segundos en la pista, la reinicia; si no, vuelve a la pista de antes
+  function anterior(estilo) {
+    estilo = estilo || M.estilo;
+    if (!ctx || !P) return reproducir(estilo);
+    const segundos = paso * 60 / P.bpm / 4;
+    const previa = segundos < 6 && P.estilo === estilo ? historial[estilo].pop() : null;
+    const s = previa != null ? previa : (P.estilo === estilo ? P.semilla : null);
+    master.gain.setTargetAtTime(0, ctx.currentTime, 0.12);
+    setTimeout(() => { arrancarPista(estilo, 0, s); aplicarVolumen(0.8); }, 400);
+    if (!M.sonando) reproducir(estilo);
+  }
   function cambiarVolumen() {
     const pasos = [0.35, 0.7, 1];
     M.volumen = pasos[(pasos.indexOf(M.volumen) + 1) % pasos.length] || 0.7;
@@ -225,6 +241,6 @@
   function nivel() { if (!medidor) return 0; const d = new Float32Array(medidor.fftSize); medidor.getFloatTimeDomainData(d); let s = 0, pico = 0; d.forEach(v => { s += v * v; pico = Math.max(pico, Math.abs(v)); }); return { rms: +Math.sqrt(s / d.length).toFixed(3), pico: +pico.toFixed(3), estado: ctx.state }; }
   // Para grabar una muestra (pruebas): devuelve el audio de salida como un stream
   function _stream() { const d = ctx.createMediaStreamDestination(); salida.connect(d); return d.stream; }
-  Object.assign(M, { _stream, nivel, reproducir, pausar, alternar, siguiente, lugar, atenuar, cambiarVolumen, quiereSonar: () => leerL('encendida', false) });
+  Object.assign(M, { silenciar, anterior, _stream, nivel, reproducir, pausar, alternar, siguiente, lugar, atenuar, cambiarVolumen, quiereSonar: () => leerL('encendida', false) });
   window.MUSICA = M;
 })();

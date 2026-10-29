@@ -645,6 +645,7 @@ const OPCIONES_MENU = () => [
   { t: '🎮 Configurar controles', f: iniciarCalibracion },
   { t: '🖥 Pantalla completa', f: pantallaCompleta },
   { t: '🎵 Música: ' + (MUSICA.sonando ? 'Encendida' : 'Apagada'), f: () => { MUSICA.alternar(estiloDelLugar()); setTimeout(pintarMenu, 50); } },
+  { t: '🔇 Silenciar música: ' + (MUSICA.silenciada ? 'Sí' : 'No'), f: () => { MUSICA.silenciar(); pintarMenu(); } },
   { t: '✨ Calidad gráfica: ' + NOMBRE_CALIDAD[calidad], f: cambiarCalidad },
   { t: '🔄 Actualizar la oficina', f: () => { refrescarEstado(); mostrarPantalla('oficina'); avisar('Actualizando…'); } },
   { t: '🔑 Cerrar sesión (olvidar PIN)', f: () => { pin = ''; guardar('pin', ''); if (DEMO) { avisar('En modo demo no hay PIN.'); return; } mostrarPantalla('pin'); pintarPin(); } }
@@ -1626,12 +1627,13 @@ const estiloDelLugar = () => lugar === 'sala' ? 'synthwave' : 'enfoque';
 const NIVEL_VOL = v => v <= 0.35 ? 'bajo' : v >= 1 ? 'alto' : 'medio';
 function objetoMusica(id, nombre, icono, zona, estilo, descripcion) {
   return { id, nombre, icono, zona,
-    sub: () => esc(MUSICA.sonando && MUSICA.estilo === estilo ? '♪ ' + MUSICA.pista + ' · volumen ' + NIVEL_VOL(MUSICA.volumen) : descripcion),
+    sub: () => esc(MUSICA.sonando && MUSICA.estilo === estilo ? (MUSICA.silenciada ? '🔇 Silenciada · ' : '♪ ') + MUSICA.pista : descripcion),
     get acciones() {
       return [
-        { b: 'A', t: MUSICA.sonando ? 'Pausar' : 'Poner música', f: () => MUSICA.alternar(estilo) },
-        { b: 'X', t: 'Otra pista', f: () => MUSICA.siguiente(estilo) },
-        { b: 'Y', t: 'Volumen', f: () => { const v = MUSICA.cambiarVolumen(); avisar('🔊 Volumen ' + NIVEL_VOL(v)); } }
+        { b: 'A', t: MUSICA.sonando ? 'Pausa' : 'Play', f: () => MUSICA.alternar(estilo) },
+        { b: 'Y', t: 'Anterior', f: () => MUSICA.anterior(estilo) },
+        { b: 'X', t: 'Siguiente', f: () => MUSICA.siguiente(estilo) },
+        { b: 'B', t: MUSICA.silenciada ? 'Quitar silencio' : 'Silenciar', f: () => { const m = MUSICA.silenciar(); avisar(m ? '🔇 Música silenciada' : '🔊 Música con sonido'); } }
       ];
     } };
 }
@@ -1639,6 +1641,7 @@ const OBJ_TOCADISCOS = objetoMusica('tocadiscos', 'Tocadiscos', '🎶', { x: TOC
 function pintarMusica() {
   const chip = $('#musica-chip');
   chip.classList.toggle('oculto', !MUSICA.sonando);
+  chip.firstChild.textContent = MUSICA.silenciada ? '🔇 ' : '🎵 ';
   $('#musica-txt').textContent = MUSICA.pista ? MUSICA.pista.split(' · ')[0] : '';
   if (estacionCerca && (estacionCerca.id === 'tocadiscos' || estacionCerca.id === 'sonido')) pintarPrompt();
 }
