@@ -223,6 +223,54 @@ body.liviano #estudio-caja { box-shadow: none; }
 #fundido { position: fixed; inset: 0; z-index: 50; background: #010d0a; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
 #fundido.on { opacity: 1; }
 
+/* ---------- Controles táctiles (iPhone / Android) ---------- */
+#tactil { display: none; }
+body.tactil { touch-action: manipulation; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+body.tactil #escena { touch-action: none; }
+body.tactil #ayuda-teclado { display: none; }
+body.tactil[data-pantalla="oficina"] #tactil, body.tactil[data-pantalla="juego"] #tactil { display: block; position: fixed; inset: 0; z-index: 30; pointer-events: none; }
+#tactil-zona { position: absolute; left: 0; bottom: 0; width: 52%; height: 62%; pointer-events: auto; touch-action: none; }
+#stick { position: absolute; width: 124px; height: 124px; border-radius: 50%; background: rgba(2,38,30,.35); box-shadow: inset 0 0 0 2px rgba(218,252,146,.6); transform: translate(-50%, -50%); display: none; pointer-events: none; }
+#stick-bola { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: var(--lima); box-shadow: 0 4px 12px rgba(0,0,0,.35); }
+#tactil-pista { position: absolute; left: max(22px, env(safe-area-inset-left)); bottom: max(22px, env(safe-area-inset-bottom)); width: 104px; height: 104px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(242,247,249,.35); display: grid; place-items: center; font: 600 11px 'Roboto Mono'; color: rgba(242,247,249,.6); text-align: center; pointer-events: none; }
+.botonera { position: absolute; right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom)); width: 172px; height: 172px; }
+.bt { position: absolute; width: 60px; height: 60px; border-radius: 50%; border: 0; font: 700 22px 'Poppins'; color: var(--verde); background: rgba(242,247,249,.93); box-shadow: 0 4px 12px rgba(0,0,0,.3); pointer-events: auto; touch-action: none; padding: 0; }
+.bt.A { right: 0; top: 56px; background: var(--lima); } .bt.B { left: 56px; bottom: 0; } .bt.X { left: 56px; top: 0; } .bt.Y { left: 0; top: 56px; }
+.bt.on { transform: scale(.88); filter: brightness(.85); }
+.tactil-fila { position: absolute; display: flex; gap: 10px; pointer-events: none; }
+.tactil-fila .bt { position: static; width: 46px; height: 46px; font-size: 15px; }
+#tactil-zoom { right: max(14px, env(safe-area-inset-right)); bottom: calc(max(14px, env(safe-area-inset-bottom)) + 184px); }
+#tactil-arcade { left: max(12px, env(safe-area-inset-left)); top: max(12px, env(safe-area-inset-top)); display: none; }
+#tactil-arcade .bt { width: auto; padding: 0 14px; border-radius: 14px; font-size: 14px; }
+body[data-pantalla="juego"] #tactil-arcade { display: flex; }
+body[data-pantalla="juego"] #tactil-zoom, body[data-pantalla="juego"] #tactil-pista { display: none; }
+body.tactil #prompt { top: calc(max(16px, env(safe-area-inset-top)) + 70px); bottom: auto; }
+body.tactil #prompt .ficha { flex-wrap: wrap; gap: 8px 12px; }
+@media (max-width: 560px) {
+  body.tactil #hud { left: 10px; right: 10px; top: max(10px, env(safe-area-inset-top)); }
+  body.tactil #jugador { padding: 6px 10px 6px 6px; gap: 8px; } body.tactil #nivel-sub { display: none; }
+  body.tactil #xp-barra { width: 90px; } body.tactil #avatar { width: 34px; height: 34px; }
+  body.tactil .chip { padding: 6px 8px; gap: 4px; font-size: 12px; } body.tactil .chip b { font-size: 14px; }
+  body.tactil #derecha { gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+  body.tactil #prompt { top: calc(max(10px, env(safe-area-inset-top)) + 96px); }
+  body.tactil #panel, body.tactil #pizarra, body.tactil #estudio { padding: 8px; }
+  body.tactil #panel-cuerpo, body.tactil #pizarra-cuerpo, body.tactil #estudio-cuerpo { padding: 12px; }
+}
+/* Pantallas bajas (teléfono acostado): todo más compacto */
+@media (max-height: 520px) {
+  #estudio-cuerpo { grid-template-columns: minmax(0, 36%) minmax(0, 1fr); gap: 14px; padding: 10px 14px; }
+  .estudio-marco, .estudio-espera { max-width: 100%; }
+  #estudio-cabeza, #panel-cabeza, #pizarra-cabeza { padding: 8px 14px; }
+  #estudio-cabeza h2, #panel-cabeza h2 { font-size: 17px; } #estudio-cabeza .iso, #panel-cabeza .iso, #pizarra-cabeza .iso { width: 38px; }
+  #estudio-pie, #panel-pie, #pizarra-pie { padding: 6px 8px; gap: 5px; }
+  #panel, #pizarra, #estudio { padding: 6px; }
+  #panel-caja, #pizarra-caja, #estudio-caja { height: calc(100vh - 12px); border-radius: 18px; }
+  #panel-cuerpo, #pizarra-cuerpo { padding: 10px 14px; }
+  .carta-titulo { font-size: 19px; }
+  #jugador { min-width: 0; } #nivel-sub { display: none; }
+  #estudio-pie .accion, #panel-pie .accion, #pizarra-pie .accion { font-size: 12.5px; padding: 3px 10px 3px 3px; gap: 6px; }
+  #estudio-pie .btn, #panel-pie .btn, #pizarra-pie .btn { min-width: 24px; height: 24px; font-size: 12px; }
+}
 @media (max-width: 760px) {
   #prompt-estado { display: none; } #jugador { min-width: 0; } #xp-barra { width: 130px; } .carta-titulo { font-size: 21px; }
   .cal-columnas { grid-template-columns: 1fr; }
@@ -333,6 +381,18 @@ body.liviano #estudio-caja { box-shadow: none; }
 <!-- Máquina arcade en pantalla completa -->
 <div id="arcade" class="oculto"><canvas id="arcade-lienzo" width="480" height="270"></canvas><div id="arcade-ayuda">− Salir · + Pausa</div></div>
 <div id="fundido"></div>
+
+<!-- Controles táctiles: aparecen solos en iPhone y Android -->
+<div id="tactil">
+  <div id="tactil-pista">desliza<br>para<br>moverte</div>
+  <div id="tactil-zona"><div id="stick"><div id="stick-bola"></div></div></div>
+  <div class="botonera">
+    <button class="bt X" data-boton="X">X</button><button class="bt Y" data-boton="Y">Y</button>
+    <button class="bt A" data-boton="A">A</button><button class="bt B" data-boton="B">B</button>
+  </div>
+  <div class="tactil-fila" id="tactil-zoom"><button class="bt" data-boton="L" title="Alejar">－🔍</button><button class="bt" data-boton="R" title="Acercar">＋🔍</button></div>
+  <div class="tactil-fila" id="tactil-arcade"><button class="bt" data-boton="MENOS">✕ Salir</button><button class="bt" data-boton="MAS">⏸ Pausa</button></div>
+</div>
 
 <div id="avisos"></div>
 <div id="subio" class="oculto"><div class="caja"><h1>¡Subiste de nivel!</h1><p id="subio-texto">Nivel 2 · Junior</p></div></div>
@@ -580,7 +640,7 @@ function leerEntradas() {
   const pads = mandos();
   const m = mapa || MAPA_ESTANDAR;
   const estado = {};
-  ACCIONES.forEach(a => { estado[a] = valorEntrada(m[a], pads); });
+  ACCIONES.forEach(a => { estado[a] = valorEntrada(m[a], pads) || TACTIL.botones.has(a); });
   // Dirección: palanca izquierda + cruceta (botones 12-15 o eje "hat" 6/7) + teclado
   let x = 0, y = 0;
   pads.forEach(p => {
@@ -593,6 +653,8 @@ function leerEntradas() {
       if (Math.abs(p.axes[7]) > 0.5) y = Math.sign(p.axes[7]);
     }
   });
+  // palanca táctil (iPhone / Android)
+  if (Math.hypot(TACTIL.x, TACTIL.y) > 0.2 && Math.hypot(TACTIL.x, TACTIL.y) > Math.hypot(x, y)) { x = TACTIL.x; y = TACTIL.y; }
   // direcciones del mando (para menús); el teclado llega por la cola
   estado.ARRIBA = y < -0.6; estado.ABAJO = y > 0.6; estado.IZQ = x < -0.6; estado.DER = x > 0.6;
   // movimiento: mando + teclado mantenido
@@ -630,6 +692,64 @@ document.addEventListener('click', e => {
   const el = e.target.closest('[data-accion]');
   if (el) { sonar('click'); manejar(el.dataset.accion); }
 });
+
+// ---- Controles táctiles (iPhone / Android): palanca, botones, pellizco y deslizar ----
+const TACTIL = { activo: false, x: 0, y: 0, botones: new Set() };
+(function () {
+  const tactil = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (!tactil) return;
+  TACTIL.activo = true;
+  document.body.classList.add('tactil');
+  // Palanca: aparece donde pones el dedo, en la mitad izquierda de la pantalla
+  const zona = $('#tactil-zona'), stick = $('#stick'), bola = $('#stick-bola'), R = 50;
+  let cx = 0, cy = 0, dedo = null;
+  const mover = e => {
+    let dx = e.clientX - cx, dy = e.clientY - cy; const d = Math.hypot(dx, dy);
+    if (d > R) { dx *= R / d; dy *= R / d; }
+    bola.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    TACTIL.x = dx / R; TACTIL.y = dy / R;
+  };
+  zona.addEventListener('pointerdown', e => {
+    e.preventDefault(); dedo = e.pointerId; try { zona.setPointerCapture(dedo); } catch (_) {}
+    cx = e.clientX; cy = e.clientY; stick.style.left = cx + 'px'; stick.style.top = cy + 'px'; stick.style.display = 'block'; mover(e);
+    $('#tactil-pista').style.display = 'none';
+  });
+  zona.addEventListener('pointermove', e => { if (e.pointerId === dedo) mover(e); });
+  const soltar = e => { if (e.pointerId !== dedo) return; dedo = null; TACTIL.x = TACTIL.y = 0; stick.style.display = 'none'; bola.style.transform = ''; };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => zona.addEventListener(t, soltar));
+  // Botones A B X Y, zoom y los del arcade: se mantienen apretados mientras el dedo esté encima
+  document.querySelectorAll('#tactil [data-boton]').forEach(b => {
+    const a = b.dataset.boton;
+    b.addEventListener('pointerdown', e => { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (_) {} TACTIL.botones.add(a); b.classList.add('on'); });
+    const fin = () => { TACTIL.botones.delete(a); b.classList.remove('on'); };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => b.addEventListener(t, fin));
+  });
+  // Pellizco con dos dedos sobre la oficina: acerca o aleja la cámara
+  const lienzo = $('#escena'), dedos = new Map();
+  let distIni = 0, zoomIni = 0;
+  const distancia = () => { const [a, b] = [...dedos.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+  lienzo.addEventListener('pointerdown', e => { dedos.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (dedos.size === 2) { distIni = distancia(); zoomIni = zoom; } });
+  lienzo.addEventListener('pointermove', e => {
+    if (!dedos.has(e.pointerId)) return;
+    dedos.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (dedos.size === 2 && pantalla === 'oficina' && distIni > 0) { zoom = Math.max(6, Math.min(zoomMax, zoomIni * distIni / Math.max(1, distancia()))); ajustarTamano(); }
+  });
+  ['pointerup', 'pointercancel'].forEach(t => lienzo.addEventListener(t, e => { dedos.delete(e.pointerId); if (dedos.size < 2) distIni = 0; }));
+  // Deslizar a los lados en las mesas: otra carta / otra lámina
+  let inicio = null;
+  document.addEventListener('touchstart', e => { inicio = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), el: e.target } : null; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!inicio) return;
+    const t = e.changedTouches[0], dx = t.clientX - inicio.x, dy = t.clientY - inicio.y, r = inicio; inicio = null;
+    if (Date.now() - r.t > 700 || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (pantalla === 'estudio') {
+      if (EST.modo === 'otra') return;
+      if (r.el.closest && r.el.closest('#estudio-imagen')) return manejar(dx < 0 ? 'R' : 'L'); // lámina
+      return manejar(dx < 0 ? 'DER' : 'IZQ');                                                // otro diseño
+    }
+    if (pantalla === 'panel' || pantalla === 'pizarra') manejar(dx < 0 ? 'DER' : 'IZQ');
+  }, { passive: true });
+})();
 
 // ---- Calibración ----
 let calib = null;
@@ -697,6 +817,7 @@ addEventListener('gamepadconnected', () => {
 let pantalla = 'cargando';
 function mostrarPantalla(p) {
   pantalla = p;
+  document.body.dataset.pantalla = p;
   $('#pantalla-pin').classList.toggle('oculto', p !== 'pin');
   $('#pantalla-calibrar').classList.toggle('oculto', p !== 'calibrar');
   $('#pantalla-menu').classList.toggle('oculto', p !== 'menu');
@@ -777,12 +898,17 @@ function pintarMenu() {
     let h = '';
     if (o.g !== grupo) { grupo = o.g; h += '<div class="menu-grupo">' + grupo + '</div>'; }
     let extra = '';
-    if (o.vol) { const n = Math.round(MUSICA.volumen * 10); extra = '<span class="vol">◀' + Array.from({ length: 10 }, (_, k) => '<i class="' + (k < n ? 'on' : '') + '"></i>').join('') + ' ' + (n * 10) + '% ▶</span>'; }
+    if (o.vol) { const n = Math.round(MUSICA.volumen * 10); extra = '<span class="vol"><b data-accion="IZQ">◀</b>' + Array.from({ length: 10 }, (_, k) => '<i class="' + (k < n ? 'on' : '') + '"></i>').join('') + ' ' + (n * 10) + '% <b data-accion="DER">▶</b></span>'; }
     return h + '<button class="opcion ' + (i === menuFoco ? 'foco' : '') + '" data-menu="' + i + '">' + o.t + extra + '</button>';
   }).join('');
   const f = $('#menu-opciones .opcion.foco'); if (f) f.scrollIntoView({ block: 'nearest' });
 }
-$('#menu-opciones').addEventListener('click', e => { const b = e.target.closest('[data-menu]'); if (b) { menuFoco = +b.dataset.menu; OPCIONES_MENU()[menuFoco].f(); } });
+$('#menu-opciones').addEventListener('click', e => {
+  const b = e.target.closest('[data-menu]'); if (!b) return;
+  menuFoco = +b.dataset.menu;
+  if (e.target.closest('[data-accion]')) return; // ◀ ▶ del volumen: lo resuelve el manejador general
+  OPCIONES_MENU()[menuFoco].f();
+});
 function manejarMenu(a) {
   const n = OPCIONES_MENU().length;
   const op = OPCIONES_MENU()[menuFoco];
