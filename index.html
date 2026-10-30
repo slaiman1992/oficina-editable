@@ -244,17 +244,49 @@ body.tactil[data-pantalla="oficina"] #tactil, body.tactil[data-pantalla="juego"]
 #tactil-arcade .bt { width: auto; padding: 0 14px; border-radius: 14px; font-size: 14px; }
 body[data-pantalla="juego"] #tactil-arcade { display: flex; }
 body[data-pantalla="juego"] #tactil-zoom, body[data-pantalla="juego"] #tactil-pista { display: none; }
-body.tactil #prompt { top: calc(max(16px, env(safe-area-inset-top)) + 70px); bottom: auto; }
-body.tactil #prompt .ficha { flex-wrap: wrap; gap: 8px 12px; }
 @media (max-width: 560px) {
-  body.tactil #hud { left: 10px; right: 10px; top: max(10px, env(safe-area-inset-top)); }
-  body.tactil #jugador { padding: 6px 10px 6px 6px; gap: 8px; } body.tactil #nivel-sub { display: none; }
-  body.tactil #xp-barra { width: 90px; } body.tactil #avatar { width: 34px; height: 34px; }
-  body.tactil .chip { padding: 6px 8px; gap: 4px; font-size: 12px; } body.tactil .chip b { font-size: 14px; }
-  body.tactil #derecha { gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
-  body.tactil #prompt { top: calc(max(10px, env(safe-area-inset-top)) + 96px); }
+  body.tactil .chip { padding: 3px 6px; } body.tactil #nivel-titulo { font-size: 11px; }
   body.tactil #panel, body.tactil #pizarra, body.tactil #estudio { padding: 8px; }
   body.tactil #panel-cuerpo, body.tactil #pizarra-cuerpo, body.tactil #estudio-cuerpo { padding: 12px; }
+}
+/* ---------- Móvil: interfaz liviana que no tapa la oficina ---------- */
+body.tactil .ficha { background: rgba(242,247,249,.84); box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+body.tactil #hud { top: max(8px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); align-items: center; }
+body.tactil #jugador { min-width: 0; padding: 4px 10px 4px 4px; gap: 7px; border-radius: 14px; }
+body.tactil #avatar { width: 30px; height: 30px; padding: 5px; border-radius: 9px; }
+body.tactil #nivel-titulo { font-size: 12px; } body.tactil #nivel-sub { display: none; }
+body.tactil #xp-barra { width: 64px; height: 4px; margin-top: 3px; }
+body.tactil #derecha { gap: 4px; flex-wrap: nowrap; }
+body.tactil .chip { padding: 4px 7px; gap: 3px; font-size: 11px; border-radius: 11px; }
+body.tactil .chip b { font-size: 12px; }
+body.tactil .chip.accion { font-size: 0; gap: 4px; padding: 3px 5px; } body.tactil .chip.accion .btn { font-size: 13px; min-width: 24px; height: 24px; }
+body.tactil #demo, body.tactil #musica-chip { display: none; }
+body.tactil #prompt { top: calc(max(8px, env(safe-area-inset-top)) + 46px); bottom: auto; left: 8px; right: 8px; transform: none; width: auto; display: flex; justify-content: center; pointer-events: none; }
+body.tactil #prompt .ficha { width: fit-content; max-width: 100%; }
+body.tactil #prompt .ficha { gap: 8px; padding: 6px 8px 6px 6px; border-radius: 14px; flex-wrap: wrap; justify-content: center; }
+body.tactil #prompt-icono { width: 32px; height: 32px; font-size: 17px; border-radius: 9px; }
+body.tactil #prompt-nombre { font-size: 13.5px; } body.tactil #prompt-estado { display: none; }
+body.tactil #prompt-acciones { gap: 5px; margin-left: 0; flex-basis: 100%; justify-content: center; flex-wrap: wrap; }
+body.tactil #prompt .ficha > div:nth-child(2) { flex: 0 1 auto; }
+body.tactil #prompt-acciones .accion { font-size: 11.5px; padding: 2px 8px 2px 2px; gap: 5px; border-radius: 10px; }
+body.tactil #prompt-acciones .btn { min-width: 22px; height: 22px; font-size: 11px; }
+body.tactil #avisos { top: calc(max(8px, env(safe-area-inset-top)) + 96px); gap: 5px; }
+body.tactil .aviso-toast { font-size: 12.5px; padding: 7px 12px; border-radius: 11px; max-width: 86vw; box-shadow: 0 6px 14px rgba(0,0,0,.25); opacity: .95; }
+body.tactil .bt { width: 52px; height: 52px; font-size: 19px; opacity: .82; }
+body.tactil .botonera { width: 148px; height: 148px; }
+body.tactil .bt.A { top: 48px; } body.tactil .bt.B { left: 48px; } body.tactil .bt.X { left: 48px; } body.tactil .bt.Y { top: 48px; }
+body.tactil .tactil-fila .bt { width: 40px; height: 40px; font-size: 13px; }
+body.tactil #tactil-zoom { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 158px); }
+body.tactil #tactil-pista { width: 84px; height: 84px; font-size: 10px; opacity: .8; }
+
+@media (max-width: 560px) {
+  body.tactil #prompt-icono { display: none; }
+  body.tactil #prompt .ficha { padding: 5px 6px; gap: 4px 6px; }
+  body.tactil #prompt-nombre { font-size: 12px; }
+  body.tactil #prompt-acciones { gap: 4px; }
+  body.tactil #prompt-acciones .accion { font-size: 10.5px; padding: 2px 7px 2px 2px; gap: 4px; }
+  body.tactil #prompt-acciones .btn { min-width: 19px; height: 19px; font-size: 10px; }
+  body.tactil .chip { padding: 3px 6px; } body.tactil #nivel-titulo { font-size: 11px; }
 }
 /* Teléfonos parados: menú más angosto */
 @media (max-width: 560px) {
@@ -462,7 +494,9 @@ function avisar(texto, malo) {
   const d = document.createElement('div');
   d.className = 'aviso-toast' + (malo ? ' mal' : '');
   d.textContent = texto;
-  $('#avisos').appendChild(d);
+  const caja = $('#avisos');
+  if (document.body.classList.contains('tactil')) while (caja.children.length >= 2) caja.firstChild.remove(); // en el teléfono, máximo 2 avisos
+  caja.appendChild(d);
   setTimeout(() => d.remove(), malo ? 5200 : 3200);
 }
 function xpFlotante(n) {
