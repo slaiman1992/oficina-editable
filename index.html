@@ -653,6 +653,8 @@ function leerEntradas() {
       if (Math.abs(p.axes[7]) > 0.5) y = Math.sign(p.axes[7]);
     }
   });
+  // En pantallas táctiles con mando conectado (como la Switch con Joy-Con) los controles táctiles se esconden
+  if (TACTIL.activo) { const quiere = pads.length === 0; if (quiere !== document.body.classList.contains('tactil')) document.body.classList.toggle('tactil', quiere); }
   // palanca táctil (iPhone / Android)
   if (Math.hypot(TACTIL.x, TACTIL.y) > 0.2 && Math.hypot(TACTIL.x, TACTIL.y) > Math.hypot(x, y)) { x = TACTIL.x; y = TACTIL.y; }
   // direcciones del mando (para menús); el teclado llega por la cola
