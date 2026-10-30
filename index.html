@@ -654,7 +654,13 @@ function leerEntradas() {
     }
   });
   // En pantallas táctiles con mando conectado (como la Switch con Joy-Con) los controles táctiles se esconden
-  if (TACTIL.activo) { const quiere = pads.length === 0; if (quiere !== document.body.classList.contains('tactil')) document.body.classList.toggle('tactil', quiere); }
+  // Un equipo que alguna vez usó mando (la Switch) arranca SIN controles táctiles; solo aparecen si tocas la pantalla sin mando
+  if (TACTIL.activo) {
+    if (pads.length && !TACTIL.usaMando) { TACTIL.usaMando = true; guardar('usaMando', true); }
+    const quiere = pads.length === 0 && (!TACTIL.usaMando || TACTIL.tocado);
+    if (quiere !== document.body.classList.contains('tactil')) document.body.classList.toggle('tactil', quiere);
+    if (pads.length) TACTIL.tocado = false;
+  }
   // palanca táctil (iPhone / Android)
   if (Math.hypot(TACTIL.x, TACTIL.y) > 0.2 && Math.hypot(TACTIL.x, TACTIL.y) > Math.hypot(x, y)) { x = TACTIL.x; y = TACTIL.y; }
   // direcciones del mando (para menús); el teclado llega por la cola
@@ -696,12 +702,14 @@ document.addEventListener('click', e => {
 });
 
 // ---- Controles táctiles (iPhone / Android): palanca, botones, pellizco y deslizar ----
-const TACTIL = { activo: false, x: 0, y: 0, botones: new Set() };
+const TACTIL = { activo: false, x: 0, y: 0, botones: new Set(), usaMando: !!leer('usaMando', false), tocado: false };
 (function () {
   const tactil = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   if (!tactil) return;
   TACTIL.activo = true;
-  document.body.classList.add('tactil');
+  if (!TACTIL.usaMando) document.body.classList.add('tactil');
+  // En la Switch: si tocas la pantalla con los Joy-Con desconectados, aparecen los controles táctiles
+  document.addEventListener('touchstart', () => { TACTIL.tocado = true; }, { passive: true });
   // Palanca: aparece donde pones el dedo, en la mitad izquierda de la pantalla
   const zona = $('#tactil-zona'), stick = $('#stick'), bola = $('#stick-bola'), R = 50;
   let cx = 0, cy = 0, dedo = null;
